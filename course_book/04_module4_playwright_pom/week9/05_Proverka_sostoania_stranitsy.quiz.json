@@ -3,34 +3,34 @@
     {
       "question": "Какую проверку стоит использовать, если нужно убедиться, что элемент содержит только часть ожидаемого текста (например, сообщение об ошибке с дополнительным кодом)?",
       "options": [
+        "expect(locator).to_be_visible()",
         "expect(locator).to_have_text(...)",
         "expect(locator).to_contain_text(...)",
-        "expect(locator).to_be_visible()",
         "assert locator.text_content() is not None"
       ],
-      "correct": 1,
+      "correct": 2,
       "explain": "to_contain_text() проверяет, что текст элемента содержит указанную подстроку, тогда как to_have_text() требует точного совпадения всей строки целиком."
     },
     {
       "question": "Какая проверка используется для подтверждения текущего адреса страницы?",
       "options": [
-        "expect(locator).to_have_url(...)",
         "expect(page).to_have_url(...)",
-        "assert page.locator(\"url\").text() == ...",
-        "expect(page).to_be_visible()"
+        "expect(locator).to_have_url(...)",
+        "expect(page).to_be_visible()",
+        "assert page.locator(\"url\").text() == ..."
       ],
-      "correct": 1,
+      "correct": 0,
       "explain": "Проверка URL выполняется на уровне всей страницы: в expect() передаётся объект page, а не локатор конкретного элемента."
     },
     {
       "question": "Какая проверка подходит, чтобы убедиться, что в списке ровно 3 строки таблицы?",
       "options": [
-        "expect(locator).to_have_count(3)",
-        "expect(locator).to_have_text(3)",
+        "assert len(locator) == 3",
         "expect(locator).to_be_visible()",
-        "assert len(locator) == 3"
+        "expect(locator).to_have_text(3)",
+        "expect(locator).to_have_count(3)"
       ],
-      "correct": 0,
+      "correct": 3,
       "explain": "to_have_count(3) проверяет количество элементов, найденных локатором — полезно для списков и таблиц."
     },
     {
@@ -38,8 +38,8 @@
       "options": [
         "assert not expect(locator).to_be_visible()",
         "expect(locator).not_to_be_visible()",
-        "expect(locator).to_be_hidden(False)",
-        "not expect(locator).visible()"
+        "not expect(locator).visible()",
+        "expect(locator).to_be_hidden(False)"
       ],
       "correct": 1,
       "explain": "У любой проверки expect() есть форма отрицания с префиксом not_ — она так же умеет ждать нужное состояние, в отличие от оборачивания в assert not."
@@ -47,12 +47,12 @@
     {
       "question": "Какая проверка подтверждает, что кнопка заблокирована и недоступна для клика?",
       "options": [
-        "expect(locator).to_be_disabled()",
         "expect(locator).to_be_hidden()",
-        "expect(locator).not_to_have_text(\"\")",
-        "expect(locator).to_have_value(\"disabled\")"
+        "expect(locator).to_be_disabled()",
+        "expect(locator).to_have_value(\"disabled\")",
+        "expect(locator).not_to_have_text(\"\")"
       ],
-      "correct": 0,
+      "correct": 1,
       "explain": "to_be_disabled() — специальная проверка состояния элемента, подтверждающая, что он заблокирован для взаимодействия."
     }
   ]

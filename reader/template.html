@@ -416,7 +416,10 @@
   .gate-feedback{font-size:14px;padding:10px 12px;border-radius:7px;margin-bottom:14px;}
   .gate-feedback.ok{background:var(--accent-soft);color:var(--ink);}
   .gate-feedback.bad{background:rgba(168,67,47,.12);color:var(--ink);}
-  .gate-done{display:flex;align-items:center;gap:8px;color:var(--accent);font-weight:600;font-size:14px;}
+  .gate-done{display:flex;align-items:center;gap:8px;color:var(--accent);font-weight:600;font-size:14px;margin-bottom:14px;}
+  .gate-done-actions{display:flex;flex-wrap:wrap;gap:10px;}
+  .gate-retake{color:var(--muted);}
+  .gate-retake:hover{color:var(--ink);border-color:var(--danger);}
   .gate-hint{font-size:13px;color:var(--muted);margin-top:10px;}
   .gate-check-btn{margin-top:2px;}
 
@@ -628,6 +631,7 @@
     g.flatIds.forEach(function(id, i){ lockIndex[id] = { list:g.flatIds, index:i }; });
   });
   function isLocked(id){
+    if(isDone(id)) return false; // once done, stays reachable even if an earlier lesson gets retaken
     var pos = lockIndex[id];
     if(!pos || pos.index === 0) return false;
     var prevId = pos.list[pos.index-1];
@@ -740,11 +744,15 @@
 
   var currentId = null;
 
-  function navigate(id){
+  function navigate(id, opts){
+    opts = opts || {};
     var page = byId[id];
     if(!page) return;
     currentId = id;
     saveLast(id);
+    if(!opts.fromHash && location.hash.slice(1) !== id){
+      try{ history.pushState({id:id}, '', '#'+id); }catch(e){}
+    }
 
     navEl.querySelectorAll('.nav-item.active').forEach(function(el){ el.classList.remove('active'); });
     var row = navEl.querySelector('[data-id="'+id+'"]');
@@ -989,9 +997,19 @@
       wrap.innerHTML =
         '<p class="gate-title">✓ Проверка урока</p>' +
         '<p class="gate-done">'+(exercise?'Код-задание':'Мини-задание')+' и тест ('+(quiz?quiz.length:0)+(quiz?' вопр.':'')+') пройдены</p>' +
-        (exercise ? '<button type="button" class="btn gate-check-btn" id="gate-pg-reopen">Открыть код ещё раз</button><div id="gate-pg-reopen-box" hidden></div>' : '') +
-        (quiz ? '<button type="button" class="btn gate-check-btn" id="gate-review-btn">Показать вопросы ещё раз</button>' +
-                '<div id="gate-review" hidden></div>' : '');
+        '<div class="gate-done-actions">' +
+        (exercise ? '<button type="button" class="btn gate-check-btn" id="gate-pg-reopen">Открыть код ещё раз</button>' : '') +
+        (quiz ? '<button type="button" class="btn gate-check-btn" id="gate-review-btn">Показать вопросы ещё раз</button>' : '') +
+        '<button type="button" class="btn gate-check-btn gate-retake" id="gate-retake">↻ Пройти урок заново</button>' +
+        '</div>' +
+        (exercise ? '<div id="gate-pg-reopen-box" hidden></div>' : '') +
+        (quiz ? '<div id="gate-review" hidden></div>' : '');
+
+      wrap.querySelector('#gate-retake').addEventListener('click', function(){
+        setDone(page.id, false);
+        navigate(page.id);
+      });
+
       if(exercise){
         var reopenBtn = wrap.querySelector('#gate-pg-reopen');
         var reopenBox = wrap.querySelector('#gate-pg-reopen-box');
@@ -1203,9 +1221,17 @@
   }
   scrim.addEventListener('click', closeMobileNav);
 
+  // ---------- browser back/forward ----------
+  window.addEventListener('popstate', function(){
+    var id = location.hash.slice(1);
+    if(id && byId[id]) navigate(id, {fromHash:true});
+  });
+
   // ---------- initial page ----------
-  var startId = loadLast();
+  var startId = location.hash.slice(1);
+  if(!startId || !byId[startId]) startId = loadLast();
   if(!startId || !byId[startId]) startId = PAGES[0].id;
-  navigate(startId);
+  try{ history.replaceState({id:startId}, '', '#'+startId); }catch(e){}
+  navigate(startId, {fromHash:true});
 })();
 </script>
