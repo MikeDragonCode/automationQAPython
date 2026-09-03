@@ -1,0 +1,121 @@
+# 3.9. Знакомство с Pydantic: BaseModel и валидация
+
+## Зачем это нужно
+
+В прошлом уроке ты видел `UserSchema`, `CreateUserRequestSchema` — но пока как чёрный ящик. Пора понять, что это такое и почему в API-тестировании принято описывать структуру запросов и ответов именно через Pydantic, а не работать напрямую со словарями из `response.json()`.
+
+## Теория
+
+**Pydantic** — библиотека для описания структур данных и их автоматической валидации на основе аннотаций типов Python. В `boilerplate/requirements.txt` уже зафиксирована версия `pydantic==2.9.2`.
+
+### Базовая модель
+
+```python
+from pydantic import BaseModel
+
+
+class User(BaseModel):
+    id: int
+    name: str
+    email: str
+
+
+user = User(id=1, name="Alice", email="alice@example.com")
+print(user.id)  # 1 — обращение через атрибут, а не user["id"]
+```
+
+`BaseModel` — базовый класс, от которого наследуются все модели Pydantic. При создании объекта Pydantic **проверяет** типы каждого поля. Если типы не совпадают и не могут быть безопасно приведены — будет выброшено исключение `ValidationError`:
+
+```python
+User(id="not_a_number", name="Alice", email="alice@example.com")
+# pydantic_core._pydantic_core.ValidationError: 1 validation error for User
+# id: Input should be a valid integer, unable to parse string as an integer
+```
+
+Обрати внимание на слово "приведены": Pydantic по умолчанию делает разумные автоматические преобразования. Если передать `id="123"` (строку), Pydantic превратит её в `int(123)`, потому что строка однозначно представляет число. А вот `"not_a_number"` преобразовать некуда — отсюда ошибка.
+
+### Обязательные и опциональные поля
+
+Поле без значения по умолчанию — обязательное:
+
+```python
+class User(BaseModel):
+    id: int
+    name: str
+    is_active: bool = True  # опциональное поле со значением по умолчанию
+```
+
+Если `is_active` не передать при создании объекта, оно возьмёт `True`. А вот если не передать `id` или `name` — Pydantic бросит ошибку валидации, потому что у этих полей нет значения по умолчанию.
+
+Для полей, которые могут отсутствовать и не иметь никакого разумного значения по умолчанию, используется `| None` вместе с `= None`:
+
+```python
+class UpdateUserRequestSchema(BaseModel):
+    email: str | None = None
+    username: str | None = None
+```
+
+Такая модель годится для PATCH-запроса: студент передаёт только те поля, которые хочет изменить, а остальные остаются `None` и просто не участвуют в запросе (об этом — в уроке 3.13, когда будем реализовывать `update_user_api`).
+
+### Вложенные модели
+
+Pydantic позволяет использовать одну модель как тип поля в другой — так описываются вложенные JSON-объекты:
+
+```python
+class GeoSchema(BaseModel):
+    lat: str
+    lng: str
+
+
+class AddressSchema(BaseModel):
+    street: str
+    city: str
+    geo: GeoSchema  # вложенная модель
+
+
+address = AddressSchema(street="Main St", city="Springfield", geo={"lat": "10", "lng": "20"})
+print(address.geo.lat)  # "10" — Pydantic сам превратил вложенный словарь в GeoSchema
+```
+
+Важный момент: даже если ты передашь вложенный объект как обычный словарь (`geo={"lat": "10", "lng": "20"}`), Pydantic автоматически провалидирует и превратит его в объект `GeoSchema`. Это ровно та ситуация, которая возникает при разборе ответа реального API — JSON приходит как вложенные словари, а Pydantic превращает всю эту структуру в дерево объектов одним вызовом.
+
+### Три способа создать модель
+
+1. **Через именованные аргументы** — как в примерах выше, `User(id=1, name="Alice", ...)`.
+2. **Через распаковку словаря** — `User(**data)`, где `data` — обычный `dict`. Именно так удобно работать с результатом `response.json()`.
+3. **Через JSON-строку** — `User.model_validate_json(json_string)`. Этот способ мы подробно разберём в уроке 3.11, потому что именно его использует `UsersClient`.
+
+## Пример
+
+Настоящая модель из репозитория — `boilerplate/clients/users/users_schema.py`:
+
+```python
+from pydantic import BaseModel, EmailStr
+
+
+class UserSchema(BaseModel):
+    """
+    Описание структуры пользователя из https://jsonplaceholder.typicode.com/users.
+    """
+    id: int
+    name: str
+    username: str
+    email: EmailStr
+    address: AddressSchema
+    phone: str
+    website: str
+    company: CompanySchema
+```
+
+Обрати внимание на `EmailStr` вместо обычного `str` — это встроенный в Pydantic тип, который не просто хранит строку, а проверяет, что она похожа на email. Если в ответе API окажется `"email": "not-an-email"`, модель не соберётся, и ты сразу узнаешь об этом на этапе валидации, а не где-то глубже в тесте.
+
+## Частые ошибки
+
+- Путать `BaseModel` с обычным `dict` и пытаться обращаться к полям через `user["id"]` вместо `user.id`.
+- Забывать, что поле без `= значение` — обязательное, и удивляться `ValidationError` при попытке создать модель без всех полей.
+- Пытаться засунуть в Pydantic-модель бизнес-логику или сетевые вызовы (например, метод, который сам ходит в API) — модель должна отвечать только за структуру и валидацию данных, а не выполнять запросы.
+- Не устанавливать дополнительную зависимость для `EmailStr` (`pydantic[email]`) — без неё этот тип попросту не будет работать.
+
+## Мини-задание
+
+Опиши Pydantic-модель `PostSchema` для ресурса `/posts` API JSONPlaceholder (поля: `userId: int`, `id: int`, `title: str`, `body: str`). Получи через `requests` любой пост (`GET /posts/1`), передай `response.json()` в модель через распаковку словаря (`PostSchema(**response.json())`) и распечатай `post.title` через атрибут.
