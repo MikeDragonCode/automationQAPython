@@ -1,0 +1,11 @@
+{
+  "question": "Если бы before_script job'а 'ui' в .gitlab-ci.yml состоял только из строки playwright install --with-deps chromium (без pip install -r requirements.txt), что произошло бы с зависимостями из requirements.txt для этого job'а?",
+  "options": [
+    "Они всё равно установятся — верхнеуровневый before_script суммируется с job-level",
+    "Они НЕ установятся — before_script job'а полностью заменяет верхнеуровневый, а не дополняет его",
+    "GitLab автоматически допишет их в конец списка команд",
+    "Пайплайн откажется стартовать из-за ошибки конфигурации"
+  ],
+  "correct": 1,
+  "explain": "before_script на уровне job'а полностью переопределяет верхнеуровневый — поэтому в реальном ci.yml курса ui-job явно повторяет обе команды: и pip install, и playwright install."
+}

@@ -1,0 +1,11 @@
+{
+  "question": "От какой фикстуры зависит фикстура registration_page в conftest.py boilerplate?",
+  "options": [
+    "От фикстуры user_data",
+    "От фикстуры page, предоставляемой плагином pytest-playwright",
+    "Ни от какой — она создаёт объект RegistrationPage без каких-либо параметров",
+    "От фикстуры dashboard_page"
+  ],
+  "correct": 1,
+  "explain": "Сигнатура def registration_page(page: Page) -> RegistrationPage показывает, что фикстура запрашивает встроенную фикстуру page от pytest-playwright и на её основе создаёт объект страницы."
+}

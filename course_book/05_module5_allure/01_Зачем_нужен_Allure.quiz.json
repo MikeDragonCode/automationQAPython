@@ -1,0 +1,11 @@
+{
+  "question": "Ты запустил pytest --alluredir=allure-results. Что нужно сделать дальше, чтобы увидеть красивый HTML-отчёт?",
+  "options": [
+    "Ничего — allure-results уже и есть готовый HTML-отчёт",
+    "Отдельно установить и запустить Allure CLI (например, allure serve) поверх этой папки",
+    "Открыть JSON-файлы из allure-results прямо в браузере",
+    "Переустановить allure-pytest с флагом --html"
+  ],
+  "correct": 1,
+  "explain": "allure-pytest только пишет сырые JSON-результаты. Превращает их в HTML-отчёт отдельная программа — Allure CLI (allure serve / allure generate)."
+}

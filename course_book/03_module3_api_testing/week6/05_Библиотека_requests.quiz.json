@@ -1,0 +1,11 @@
+{
+  "question": "Как правильно передать тело JSON-запроса в POST-запросе через requests, чтобы библиотека сама сериализовала словарь и выставила заголовок Content-Type?",
+  "options": [
+    "requests.post(url, params=data)",
+    "requests.post(url, body=data)",
+    "requests.post(url, json=data)",
+    "requests.post(url, text=data)"
+  ],
+  "correct": 2,
+  "explain": "Аргумент json= сериализует словарь в JSON-строку и сам подставляет заголовок Content-Type: application/json. params используется для query-параметров, а body/text не являются аргументами requests."
+}

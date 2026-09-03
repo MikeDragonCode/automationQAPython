@@ -1,0 +1,11 @@
+{
+  "question": "Почему UserSchema.model_validate_json(response.text) считается более надёжным вариантом, чем UserSchema(**response.json())?",
+  "options": [
+    "response.json() вообще не работает с объектом requests.Response",
+    "Парсинг JSON и валидация происходят за один шаг средствами Pydantic, а не разбиты на отдельный вызов response.json(), который может упасть с непрозрачной ошибкой ещё до валидации",
+    "model_validate_json работает быстрее в несколько раз",
+    "response.text всегда возвращает уже провалидированный объект"
+  ],
+  "correct": 1,
+  "explain": "model_validate_json парсит и валидирует строку ответа за один шаг Pydantic-средствами, давая более понятную ошибку. response.json() парсит JSON отдельно и может упасть с непрозрачным JSONDecodeError раньше, чем Pydantic вообще увидит данные."
+}

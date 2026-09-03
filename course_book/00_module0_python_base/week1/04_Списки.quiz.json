@@ -1,0 +1,11 @@
+{
+  "question": "Какая из строк приведёт к тому, что переменная result станет ссылаться на None вместо списка?",
+  "options": [
+    "numbers = [3, 1, 2]; result = sorted(numbers)",
+    "numbers = [3, 1, 2]; result = list(numbers)",
+    "numbers = [3, 1, 2]; result = numbers[:]",
+    "numbers = [3, 1, 2]; result = numbers.append(4)"
+  ],
+  "correct": 3,
+  "explain": "Метод append() изменяет список на месте и ничего не возвращает (None). sorted(), list() и срез [:] — все возвращают настоящий список."
+}

@@ -1,0 +1,11 @@
+{
+  "question": "Как запустить только тесты с маркером unit, исключив при этом тесты, которые дополнительно помечены маркером smoke?",
+  "options": [
+    "pytest -m unit smoke",
+    "pytest -m \"unit and not smoke\"",
+    "pytest -m \"unit, not smoke\"",
+    "pytest --marker unit --exclude smoke"
+  ],
+  "correct": 1,
+  "explain": "Флаг -m принимает выражение с булевой логикой (and, or, not). Выражение \"unit and not smoke\" выбирает тесты, помеченные unit, но при этом не помеченные smoke. Такое составное выражение нужно брать в кавычки, чтобы shell не разбил его на отдельные аргументы."
+}

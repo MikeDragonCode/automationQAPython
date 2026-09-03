@@ -47,13 +47,17 @@ def parse_title(markdown_text: str):
     return None, "Без названия"
 
 
-def add_page(path: Path, section: str, subgroup: str | None, is_overview: bool = False):
+HAS_PRACTICE_RE = re.compile(r"^#+\s*Мини-задание", re.MULTILINE)
+
+
+def add_page(path: Path, section: str, subgroup: str | None, is_overview: bool = False, gateable: bool = True):
     text = path.read_text(encoding="utf-8")
     num, title = parse_title(text)
     pid = next_id()
     relpath = str(path.relative_to(ROOT))
     relpath_to_id[relpath] = pid
-    pages.append({
+
+    page = {
         "id": pid,
         "section": section,
         "subgroup": subgroup,
@@ -61,8 +65,22 @@ def add_page(path: Path, section: str, subgroup: str | None, is_overview: bool =
         "num": num,
         "title": title,
         "content": text,
+        "hasPractice": gateable and bool(HAS_PRACTICE_RE.search(text)),
         "dir": str(path.parent.relative_to(ROOT)),
-    })
+    }
+
+    quiz_path = path.parent / (path.stem + ".quiz.json")
+    if gateable and quiz_path.exists():
+        try:
+            quiz = json.loads(quiz_path.read_text(encoding="utf-8"))
+            assert isinstance(quiz.get("options"), list) and len(quiz["options"]) >= 2
+            assert isinstance(quiz.get("correct"), int) and 0 <= quiz["correct"] < len(quiz["options"])
+            assert quiz.get("question") and quiz.get("explain")
+            page["quiz"] = quiz
+        except Exception as e:
+            print(f"WARN: bad quiz json at {quiz_path.relative_to(ROOT)}: {e}")
+
+    pages.append(page)
 
 
 def week_label(dirname: str) -> str:
@@ -70,11 +88,11 @@ def week_label(dirname: str) -> str:
     return f"Неделя {m.group(1)}" if m else dirname
 
 
-# --- "О курсе" ---
-add_page(ROOT / "README.md", "О курсе", None, is_overview=True)
-add_page(ROOT / "ROADMAP.md", "О курсе", None)
-add_page(ROOT / "STYLE_GUIDE.md", "О курсе", None)
-add_page(ROOT / "boilerplate" / "README.md", "О курсе", None)
+# --- "О курсе" (справочные страницы, без гейта) ---
+add_page(ROOT / "README.md", "О курсе", None, is_overview=True, gateable=False)
+add_page(ROOT / "ROADMAP.md", "О курсе", None, gateable=False)
+add_page(ROOT / "STYLE_GUIDE.md", "О курсе", None, gateable=False)
+add_page(ROOT / "boilerplate" / "README.md", "О курсе", None, gateable=False)
 
 # --- Модули 0-7 ---
 for dirname, section_title in MODULES:

@@ -1,0 +1,11 @@
+{
+  "question": "Какую проверку стоит использовать, если нужно убедиться, что элемент содержит только часть ожидаемого текста (например, сообщение об ошибке с дополнительным кодом)?",
+  "options": [
+    "expect(locator).to_have_text(...)",
+    "expect(locator).to_contain_text(...)",
+    "expect(locator).to_be_visible()",
+    "assert locator.text_content() is not None"
+  ],
+  "correct": 1,
+  "explain": "to_contain_text() проверяет, что текст элемента содержит указанную подстроку, тогда как to_have_text() требует точного совпадения всей строки целиком."
+}

@@ -1,0 +1,11 @@
+{
+  "question": "В классе RegistrationPage(BasePage) из __init__ убрали вызов super().__init__(page). Что произойдёт?",
+  "options": [
+    "Ничего не изменится — self.page создастся автоматически",
+    "Возникнет ошибка ещё на этапе объявления класса RegistrationPage",
+    "self.page не будет создан, и любой метод, использующий self.page (например open()), упадёт с AttributeError",
+    "RegistrationPage перестанет наследоваться от BasePage"
+  ],
+  "correct": 2,
+  "explain": "Атрибут self.page создаётся именно в __init__ родительского класса BasePage. Без вызова super().__init__(page) этот код не выполнится, и обращение к self.page в унаследованных методах вызовет AttributeError."
+}

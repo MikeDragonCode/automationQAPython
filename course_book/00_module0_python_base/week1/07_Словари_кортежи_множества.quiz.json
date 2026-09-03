@@ -1,0 +1,11 @@
+{
+  "question": "Как безопаснее всего получить значение по ключу 'email' из словаря user, если этот ключ может отсутствовать?",
+  "options": [
+    "user['email']",
+    "user.email",
+    "user.pop('email')",
+    "user.get('email')"
+  ],
+  "correct": 3,
+  "explain": "user.get('email') вернёт None (или значение по умолчанию), если ключа нет, тогда как user['email'] выбросит KeyError и прервёт выполнение скрипта."
+}
