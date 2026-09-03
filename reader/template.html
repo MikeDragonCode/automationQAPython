@@ -234,8 +234,38 @@
   .btn.done{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
   .btn.icon{padding:7px 9px;}
 
-  .article-wrap{padding:8px 40px 96px;display:flex;justify-content:center;}
-  .article{width:100%;max-width:70ch;padding-top:28px;}
+  .article-wrap{
+    padding:8px 40px 96px;
+    display:grid;
+    grid-template-columns: minmax(24px,1fr) min(72ch,100%) minmax(180px,1fr);
+    gap:0 32px;
+  }
+  .article{grid-column:2;width:100%;padding-top:28px;min-width:0;}
+
+  .toc-rail{
+    grid-column:3;
+    justify-self:start;
+    position:sticky;
+    top:76px;
+    width:210px;
+    max-width:100%;
+    padding-top:28px;
+  }
+  .toc-rail-title{
+    font-family:'JetBrains Mono', monospace;font-size:11px;font-weight:600;
+    text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px;
+  }
+  .toc-rail a{
+    display:block;font-size:13px;line-height:1.4;color:var(--muted);text-decoration:none;
+    padding:4px 0 4px 11px;border-left:2px solid var(--line);margin-bottom:1px;
+  }
+  .toc-rail a:hover{color:var(--ink);border-left-color:var(--accent);}
+  .toc-rail a.active{color:var(--ink);border-left-color:var(--accent);font-weight:600;}
+
+  @media (max-width:1240px){
+    .article-wrap{display:flex;justify-content:center;}
+    .toc-rail{display:none;}
+  }
 
   .kicker{
     font-family:'JetBrains Mono', monospace;
@@ -368,6 +398,7 @@
   .gate-row:last-child{margin-bottom:0;}
   .gate-check{display:flex;align-items:flex-start;gap:10px;font-size:14.5px;cursor:pointer;line-height:1.5;}
   .gate-check input{margin-top:4px;flex:none;width:15px;height:15px;accent-color:var(--accent);}
+  .gate-progress{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px;}
   .gate-q{font-size:15.5px;font-weight:600;margin:0 0 12px;line-height:1.45;}
   .gate-options{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
   .gate-option{
@@ -459,6 +490,7 @@
     </div>
     <div class="article-wrap">
       <article class="article" id="article"></article>
+      <div class="toc-rail" id="toc-rail" hidden></div>
     </div>
     <div class="pager" id="pager"></div>
   </main>
@@ -699,8 +731,30 @@
     doneBtn.hidden = !!(page.quiz || page.hasPractice);
     if(!doneBtn.hidden) updateDoneBtn();
 
+    buildTocRail();
+
     renderPager();
     scrollEl.scrollTop = 0;
+  }
+
+  var tocRailEl = document.getElementById('toc-rail');
+  function buildTocRail(){
+    var heads = articleEl.querySelectorAll('h2');
+    if(!heads.length){ tocRailEl.hidden = true; tocRailEl.innerHTML = ''; return; }
+    tocRailEl.hidden = false;
+    var items = '<p class="toc-rail-title">На этой странице</p>';
+    heads.forEach(function(h){
+      if(!h.id) return;
+      items += '<a href="#'+h.id+'" data-target="'+h.id+'">'+escapeHtml(h.textContent)+'</a>';
+    });
+    tocRailEl.innerHTML = items;
+    tocRailEl.querySelectorAll('a').forEach(function(a){
+      a.addEventListener('click', function(ev){
+        ev.preventDefault();
+        var target = document.getElementById(a.dataset.target);
+        if(target) target.scrollIntoView({block:'start', behavior:'smooth'});
+      });
+    });
   }
 
   function updateDoneBtn(){
@@ -713,9 +767,9 @@
     updateDoneBtn();
   });
 
-  // ---------- gate: mini-task self-check + quiz question ----------
+  // ---------- gate: mini-task self-check + sequential quiz questions ----------
   function buildGate(page){
-    var quiz = page.quiz;
+    var quiz = page.quiz; // array of {question, options, correct, explain} or undefined
     if(!quiz && !page.hasPractice) return null;
 
     var wrap = document.createElement('div');
@@ -724,8 +778,8 @@
     if(isDone(page.id)){
       wrap.innerHTML =
         '<p class="gate-title">✓ Проверка урока</p>' +
-        '<p class="gate-done">Мини-задание и тест пройдены</p>' +
-        (quiz ? '<button type="button" class="btn gate-check-btn" id="gate-review-btn">Показать вопрос ещё раз</button>' +
+        '<p class="gate-done">Мини-задание и тест ('+(quiz?quiz.length:0)+(quiz?' вопр.':'')+') пройдены</p>' +
+        (quiz ? '<button type="button" class="btn gate-check-btn" id="gate-review-btn">Показать вопросы ещё раз</button>' +
                 '<div id="gate-review" hidden></div>' : '');
       if(quiz){
         var reviewBtn = wrap.querySelector('#gate-review-btn');
@@ -735,12 +789,13 @@
           if(!reviewBox.hidden && !reviewBox.dataset.filled){
             reviewBox.dataset.filled = '1';
             reviewBox.style.marginTop = '14px';
-            reviewBox.innerHTML =
-              '<p class="gate-q">'+escapeHtml(quiz.question)+'</p>' +
-              '<div class="gate-options">' + quiz.options.map(function(opt, i){
-                return '<div class="gate-option disabled'+(i===quiz.correct?' correct':'')+'">'+escapeHtml(opt)+'</div>';
-              }).join('') + '</div>' +
-              '<div class="gate-feedback ok">'+escapeHtml(quiz.explain)+'</div>';
+            reviewBox.innerHTML = quiz.map(function(q, qi){
+              return '<div class="gate-row"><p class="gate-q">'+(qi+1)+'. '+escapeHtml(q.question)+'</p>' +
+                '<div class="gate-options">' + q.options.map(function(opt, i){
+                  return '<div class="gate-option disabled'+(i===q.correct?' correct':'')+'">'+escapeHtml(opt)+'</div>';
+                }).join('') + '</div>' +
+                '<div class="gate-feedback ok">'+escapeHtml(q.explain)+'</div></div>';
+            }).join('');
           }
         });
       }
@@ -749,26 +804,17 @@
 
     var practiceChecked = !page.hasPractice;
     var quizPassed = !quiz;
-    var picked = null;
+    var qIndex = 0;
 
     var html = '<p class="gate-title">Проверка урока</p>';
     if(page.hasPractice){
       html += '<div class="gate-row"><label class="gate-check"><input type="checkbox" id="gate-practice"> Я выполнил(а) мини-задание из этого урока</label></div>';
     }
     if(quiz){
-      html += '<div class="gate-row">' +
-        '<p class="gate-q">'+escapeHtml(quiz.question)+'</p>' +
-        '<div class="gate-options" id="gate-options">' +
-        quiz.options.map(function(opt, i){
-          return '<label class="gate-option" data-i="'+i+'"><input type="radio" name="gate-quiz"> <span>'+escapeHtml(opt)+'</span></label>';
-        }).join('') +
-        '</div>' +
-        '<div id="gate-feedback"></div>' +
-        '<button type="button" class="btn gate-check-btn" id="gate-check-btn">Проверить ответ</button>' +
-        '</div>';
+      html += '<div class="gate-row" id="gate-quiz-row"></div>';
     }
     html += '<p class="gate-hint">Следующий урок откроется, когда ' +
-      (page.hasPractice && quiz ? 'чекбокс отмечен и тест решён верно.' : quiz ? 'тест решён верно.' : 'чекбокс отмечен.') +
+      (page.hasPractice && quiz ? 'чекбокс отмечен и все вопросы решены верно.' : quiz ? 'все вопросы решены верно.' : 'чекбокс отмечен.') +
       '</p>';
     wrap.innerHTML = html;
 
@@ -787,38 +833,67 @@
     }
 
     if(quiz){
-      var optionsEl = wrap.querySelector('#gate-options');
-      var feedbackEl = wrap.querySelector('#gate-feedback');
-      var checkBtn = wrap.querySelector('#gate-check-btn');
+      var quizRow = wrap.querySelector('#gate-quiz-row');
 
-      optionsEl.querySelectorAll('.gate-option').forEach(function(optEl){
-        optEl.addEventListener('click', function(){
-          if(quizPassed) return;
-          picked = parseInt(optEl.dataset.i, 10);
-          optionsEl.querySelectorAll('.gate-option').forEach(function(o){ o.classList.remove('picked'); });
-          optEl.classList.add('picked');
-          optEl.querySelector('input').checked = true;
-        });
-      });
+      function renderQuestion(){
+        var q = quiz[qIndex];
+        var picked = null;
+        quizRow.innerHTML =
+          '<p class="gate-progress mono">Вопрос '+(qIndex+1)+' из '+quiz.length+'</p>' +
+          '<p class="gate-q">'+escapeHtml(q.question)+'</p>' +
+          '<div class="gate-options" id="gate-options">' +
+          q.options.map(function(opt, i){
+            return '<label class="gate-option" data-i="'+i+'"><input type="radio" name="gate-quiz-'+qIndex+'"> <span>'+escapeHtml(opt)+'</span></label>';
+          }).join('') +
+          '</div>' +
+          '<div id="gate-feedback"></div>' +
+          '<button type="button" class="btn gate-check-btn" id="gate-check-btn">Проверить ответ</button>';
 
-      checkBtn.addEventListener('click', function(){
-        if(picked === null){
-          feedbackEl.innerHTML = '<div class="gate-feedback bad">Выбери один из вариантов.</div>';
-          return;
-        }
-        if(picked === quiz.correct){
-          quizPassed = true;
-          optionsEl.querySelectorAll('.gate-option').forEach(function(o){
-            o.classList.add('disabled');
-            if(parseInt(o.dataset.i, 10) === quiz.correct) o.classList.add('correct');
+        var optionsEl = quizRow.querySelector('#gate-options');
+        var feedbackEl = quizRow.querySelector('#gate-feedback');
+        var checkBtn = quizRow.querySelector('#gate-check-btn');
+
+        optionsEl.querySelectorAll('.gate-option').forEach(function(optEl){
+          optEl.addEventListener('click', function(){
+            picked = parseInt(optEl.dataset.i, 10);
+            optionsEl.querySelectorAll('.gate-option').forEach(function(o){ o.classList.remove('picked'); });
+            optEl.classList.add('picked');
+            optEl.querySelector('input').checked = true;
           });
-          checkBtn.disabled = true;
-          feedbackEl.innerHTML = '<div class="gate-feedback ok">Верно! '+escapeHtml(quiz.explain)+'</div>';
-          tryComplete();
-        } else {
-          feedbackEl.innerHTML = '<div class="gate-feedback bad">Неверно, попробуй ещё раз.</div>';
-        }
-      });
+        });
+
+        checkBtn.addEventListener('click', function(){
+          if(picked === null){
+            feedbackEl.innerHTML = '<div class="gate-feedback bad">Выбери один из вариантов.</div>';
+            return;
+          }
+          if(picked === q.correct){
+            optionsEl.querySelectorAll('.gate-option').forEach(function(o){
+              o.classList.add('disabled');
+              if(parseInt(o.dataset.i, 10) === q.correct) o.classList.add('correct');
+            });
+            checkBtn.disabled = true;
+            var isLast = qIndex === quiz.length - 1;
+            feedbackEl.innerHTML = '<div class="gate-feedback ok">Верно! '+escapeHtml(q.explain)+'</div>';
+            if(isLast){
+              quizPassed = true;
+              tryComplete();
+            } else {
+              var nextBtn = document.createElement('button');
+              nextBtn.type = 'button';
+              nextBtn.className = 'btn gate-check-btn';
+              nextBtn.style.marginTop = '10px';
+              nextBtn.textContent = 'Следующий вопрос →';
+              nextBtn.addEventListener('click', function(){ qIndex++; renderQuestion(); });
+              quizRow.appendChild(nextBtn);
+            }
+          } else {
+            feedbackEl.innerHTML = '<div class="gate-feedback bad">Неверно, попробуй ещё раз.</div>';
+          }
+        });
+      }
+
+      renderQuestion();
     }
 
     return wrap;

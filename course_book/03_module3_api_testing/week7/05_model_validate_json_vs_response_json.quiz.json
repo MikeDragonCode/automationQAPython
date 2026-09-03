@@ -1,11 +1,59 @@
 {
-  "question": "Почему UserSchema.model_validate_json(response.text) считается более надёжным вариантом, чем UserSchema(**response.json())?",
-  "options": [
-    "response.json() вообще не работает с объектом requests.Response",
-    "Парсинг JSON и валидация происходят за один шаг средствами Pydantic, а не разбиты на отдельный вызов response.json(), который может упасть с непрозрачной ошибкой ещё до валидации",
-    "model_validate_json работает быстрее в несколько раз",
-    "response.text всегда возвращает уже провалидированный объект"
-  ],
-  "correct": 1,
-  "explain": "model_validate_json парсит и валидирует строку ответа за один шаг Pydantic-средствами, давая более понятную ошибку. response.json() парсит JSON отдельно и может упасть с непрозрачным JSONDecodeError раньше, чем Pydantic вообще увидит данные."
+  "questions": [
+    {
+      "question": "Почему UserSchema.model_validate_json(response.text) считается более надёжным вариантом, чем UserSchema(**response.json())?",
+      "options": [
+        "response.json() вообще не работает с объектом requests.Response",
+        "Парсинг JSON и валидация происходят за один шаг средствами Pydantic, а не разбиты на отдельный вызов response.json(), который может упасть с непрозрачной ошибкой ещё до валидации",
+        "model_validate_json работает быстрее в несколько раз",
+        "response.text всегда возвращает уже провалидированный объект"
+      ],
+      "correct": 1,
+      "explain": "model_validate_json парсит и валидирует строку ответа за один шаг Pydantic-средствами, давая более понятную ошибку. response.json() парсит JSON отдельно и может упасть с непрозрачным JSONDecodeError раньше, чем Pydantic вообще увидит данные."
+    },
+    {
+      "question": "Что произойдёт при вызове response.json(), если сервер вернул, например, HTML-страницу ошибки вместо JSON?",
+      "options": [
+        "response.json() автоматически преобразует HTML в JSON",
+        "response.json() упадёт с ошибкой вроде json.decoder.JSONDecodeError, ещё до того, как в дело вступит Pydantic",
+        "response.json() вернёт None без ошибки",
+        "response.json() вернёт HTML как обычный текст без исключения"
+      ],
+      "correct": 1,
+      "explain": "Если тело ответа — не валидный JSON, response.json() бросит исключение json.decoder.JSONDecodeError раньше, чем Pydantic вообще получит данные для валидации."
+    },
+    {
+      "question": "Какой тип данных ожидает метод model_validate_json?",
+      "options": [
+        "Уже распарсенный Python-словарь (dict), как результат response.json()",
+        "Сырую строку JSON, например response.text",
+        "Объект requests.Response целиком",
+        "Список байтов response.content без декодирования"
+      ],
+      "correct": 1,
+      "explain": "model_validate_json ожидает именно строку — например, response.text. Попытка передать в него уже распарсенный dict из response.json() приведёт к ошибке типа."
+    },
+    {
+      "question": "Согласно уроку, в каком случае разница между двумя подходами не критична и можно использовать UserSchema(**response.json())?",
+      "options": [
+        "Никогда — model_validate_json нужно использовать всегда без исключений",
+        "Когда ты уверен, что API всегда возвращает предсказуемый и корректный JSON",
+        "Только для DELETE-запросов",
+        "Только если модель не содержит вложенных структур"
+      ],
+      "correct": 1,
+      "explain": "Если API стабильно возвращает корректный JSON, оба варианта рабочие — но model_validate_json остаётся более защищённым выбором по умолчанию."
+    },
+    {
+      "question": "Почему не стоит вызывать model_validate_json на ответе с кодом 404 от get_user_api, ожидая получить UserSchema?",
+      "options": [
+        "Потому что model_validate_json физически не работает с кодами ошибок",
+        "Потому что тело ответа на ошибку заведомо не соответствует UserSchema, и попытка валидации приведёт к ValidationError вместо осмысленной проверки статус-кода",
+        "Потому что 404 всегда возвращает пустое тело, а model_validate_json требует непустую строку",
+        "Потому что это вызовет бесконечный цикл повторных запросов"
+      ],
+      "correct": 1,
+      "explain": "На негативных сценариях (404, 422) тело ответа не соответствует основной схеме — валидировать его Pydantic-моделью бессмысленно, нужно проверять response.status_code через _api-метод."
+    }
+  ]
 }

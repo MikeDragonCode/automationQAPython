@@ -1,11 +1,59 @@
 {
-  "question": "Какая из следующих функций будет найдена и запущена pytest'ом по умолчанию?",
-  "options": [
-    "def check_slugify_result():",
-    "def slugify_test_case():",
-    "def test_slugify_removes_spaces():",
-    "def Test_slugify():"
-  ],
-  "correct": 2,
-  "explain": "По умолчанию pytest ищет функции, имя которых начинается с 'test_' (именно с маленькой буквы и именно как префикс). Суффикс '_test' на конце имени функции, в отличие от имени файла, не подходит, как и вариант с заглавной 'Test_'."
+  "questions": [
+    {
+      "question": "Какая из следующих функций будет найдена и запущена pytest'ом по умолчанию?",
+      "options": [
+        "def check_slugify_result():",
+        "def slugify_test_case():",
+        "def test_slugify_removes_spaces():",
+        "def Test_slugify():"
+      ],
+      "correct": 2,
+      "explain": "По умолчанию pytest ищет функции, имя которых начинается с 'test_' (именно с маленькой буквы и именно как префикс). Суффикс '_test' на конце имени функции, в отличие от имени файла, не подходит, как и вариант с заглавной 'Test_'."
+    },
+    {
+      "question": "Какой из перечисленных файлов pytest найдёт автоматически по стандартным правилам поиска тестовых файлов?",
+      "options": [
+        "utils_string.py",
+        "string_utils_test.py",
+        "helpers_for_tests.py",
+        "check_string_utils.py"
+      ],
+      "correct": 1,
+      "explain": "По умолчанию pytest ищет файлы вида test_*.py или *_test.py. string_utils_test.py подходит под второй шаблон, остальные варианты не начинаются и не заканчиваются на test."
+    },
+    {
+      "question": "Для чего в pytest.ini используется настройка `testpaths = tests`?",
+      "options": [
+        "Она указывает pytest игнорировать все тесты внутри папки tests",
+        "Она ограничивает поиск тестов директорией tests, ускоряя запуск и защищая от случайного сбора постороннего кода",
+        "Она переименовывает папку с тестами в tests при каждом запуске",
+        "Без неё pytest вообще не сможет найти ни одного теста в проекте"
+      ],
+      "correct": 1,
+      "explain": "testpaths говорит pytest, где именно искать тесты, вместо сканирования всего проекта — это и быстрее, и безопаснее с точки зрения случайного попадания постороннего кода в сборку."
+    },
+    {
+      "question": "Как запустить только одну конкретную тестовую функцию `test_chunk_list_splits_evenly` из файла `tests/unit/test_string_utils.py`?",
+      "options": [
+        "pytest tests/unit/test_string_utils.py -only test_chunk_list_splits_evenly",
+        "pytest tests/unit/test_string_utils.py::test_chunk_list_splits_evenly",
+        "pytest -k tests/unit/test_string_utils.py",
+        "pytest tests/unit/test_string_utils.py.test_chunk_list_splits_evenly"
+      ],
+      "correct": 1,
+      "explain": "Node id строится как путь к файлу, символ :: и имя тестовой функции — именно так pytest адресует конкретный тест внутри файла."
+    },
+    {
+      "question": "В проекте есть тесты test_user_data, test_users_client и test_password. Что запустит команда `pytest -k user`?",
+      "options": [
+        "Только test_user_data, потому что имя совпадает точнее",
+        "test_user_data и test_users_client, потому что -k ищет по подстроке в имени теста",
+        "Все три теста, потому что -k не фильтрует, а только помечает совпадения",
+        "Ни одного теста, потому что -k требует точного совпадения имени"
+      ],
+      "correct": 1,
+      "explain": "-k фильтрует тесты по подстроке, а не по точному совпадению, поэтому запустятся оба теста, в имени которых есть 'user' — test_user_data и test_users_client."
+    }
+  ]
 }

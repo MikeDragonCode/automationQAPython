@@ -72,11 +72,14 @@ def add_page(path: Path, section: str, subgroup: str | None, is_overview: bool =
     quiz_path = path.parent / (path.stem + ".quiz.json")
     if gateable and quiz_path.exists():
         try:
-            quiz = json.loads(quiz_path.read_text(encoding="utf-8"))
-            assert isinstance(quiz.get("options"), list) and len(quiz["options"]) >= 2
-            assert isinstance(quiz.get("correct"), int) and 0 <= quiz["correct"] < len(quiz["options"])
-            assert quiz.get("question") and quiz.get("explain")
-            page["quiz"] = quiz
+            data = json.loads(quiz_path.read_text(encoding="utf-8"))
+            questions = data.get("questions")
+            assert isinstance(questions, list) and 3 <= len(questions) <= 6
+            for q in questions:
+                assert isinstance(q.get("options"), list) and len(q["options"]) == 4
+                assert isinstance(q.get("correct"), int) and 0 <= q["correct"] < 4
+                assert q.get("question") and q.get("explain")
+            page["quiz"] = questions
         except Exception as e:
             print(f"WARN: bad quiz json at {quiz_path.relative_to(ROOT)}: {e}")
 
