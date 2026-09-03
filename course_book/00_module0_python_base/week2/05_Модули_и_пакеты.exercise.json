@@ -1,0 +1,5 @@
+{
+  "prompt": "В уроке предлагается разнести calculate_discount(price, percent) в отдельный модуль calculators.py и импортировать её в main.py. В песочнице нет файловой системы и реального import, поэтому здесь ты проверяешь саму функцию calculate_discount(price, percent), которую в реальном проекте вынес бы в модуль.",
+  "starter": "def calculate_discount(price, percent):\n    # верни цену со скидкой percent процентов\n    pass\n",
+  "tests": "def test_discount_basic():\n    assert calculate_discount(1000, 10) == 900, \"скидка 10% от 1000 должна давать 900\"\n\n\ndef test_discount_zero_percent():\n    assert calculate_discount(500, 0) == 500, \"при скидке 0% цена не должна меняться\"\n\n\ndef test_discount_full():\n    assert calculate_discount(200, 100) == 0, \"при скидке 100% итоговая цена должна быть 0\"\n\n\ndef test_discount_float_result():\n    assert calculate_discount(150, 20) == 120, \"скидка 20% от 150 должна давать 120\"\n"
+}

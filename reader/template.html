@@ -1,6 +1,7 @@
 <meta charset="utf-8">
 <title>QA Course Reader</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 <style>
   :root{
     --paper:#f2f4f0;
@@ -419,6 +420,52 @@
   .gate-hint{font-size:13px;color:var(--muted);margin-top:10px;}
   .gate-check-btn{margin-top:2px;}
 
+  /* ---------- playground (Pyodide code exercise) ---------- */
+  .pg{margin-bottom:4px;}
+  .pg-prompt{font-size:14.5px;line-height:1.6;margin:0 0 14px;}
+  .pg-editor{
+    border:1px solid var(--line);
+    border-radius:7px;
+    overflow:hidden;
+    margin-bottom:10px;
+  }
+  .pg-editor .CodeMirror{
+    height:auto;
+    min-height:140px;
+    max-height:420px;
+    overflow-y:auto;
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    line-height:1.55;
+    background:var(--code-bg);
+    color:var(--ink);
+  }
+  .pg-editor .CodeMirror-gutters{background:var(--code-bg);border-right:1px solid var(--line);}
+  .pg-editor .CodeMirror-linenumber{color:var(--muted);}
+  .pg-editor .CodeMirror-cursor{border-left:1.5px solid var(--accent);}
+  .pg-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .pg-status{font-size:12.5px;color:var(--muted);}
+  .pg-output{display:flex;flex-direction:column;gap:6px;margin-bottom:6px;}
+  .pg-test-row{
+    display:flex;align-items:flex-start;gap:8px;
+    font-family:'JetBrains Mono', monospace;font-size:12.5px;line-height:1.5;
+    padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--paper);
+  }
+  .pg-test-row.pass{border-color:var(--accent);}
+  .pg-test-row.fail{border-color:var(--danger);}
+  .pg-test-mark{flex:none;font-weight:700;}
+  .pg-test-row.pass .pg-test-mark{color:var(--accent);}
+  .pg-test-row.fail .pg-test-mark{color:var(--danger);}
+  .pg-test-msg{color:var(--muted);margin-top:2px;}
+  .pg-stdout{
+    font-family:'JetBrains Mono', monospace;font-size:12.5px;white-space:pre-wrap;
+    background:var(--code-bg);border:1px solid var(--line);border-radius:6px;
+    padding:10px 12px;margin-top:6px;color:var(--ink);
+  }
+  .pg-summary{font-size:13.5px;font-weight:600;margin:8px 0 0;}
+  .pg-summary.ok{color:var(--accent);}
+  .pg-summary.bad{color:var(--danger);}
+
   /* ---------- Mobile ---------- */
   .menu-btn{display:none;}
   .scrim{
@@ -500,6 +547,8 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
 <script>
 (function(){
   "use strict";
@@ -727,8 +776,11 @@
     });
 
     var gateNode = buildGate(page);
-    if(gateNode) articleEl.appendChild(gateNode);
-    doneBtn.hidden = !!(page.quiz || page.hasPractice);
+    if(gateNode){
+      articleEl.appendChild(gateNode);
+      if(gateNode._cm) gateNode._cm.refresh();
+    }
+    doneBtn.hidden = !!(page.quiz || page.hasPractice || page.exercise);
     if(!doneBtn.hidden) updateDoneBtn();
 
     buildTocRail();
@@ -767,10 +819,168 @@
     updateDoneBtn();
   });
 
+  // ---------- playground: Pyodide-powered code exercise ----------
+  var PY_RUNNER_SRC = [
+    "import json, io, contextlib",
+    "",
+    "def __run_checks(student_code, tests_code):",
+    "    ns = {}",
+    "    out = io.StringIO()",
+    "    result = {'compileError': None, 'stdout': '', 'tests': []}",
+    "    try:",
+    "        with contextlib.redirect_stdout(out):",
+    "            exec(student_code, ns)",
+    "    except Exception as e:",
+    "        result['compileError'] = type(e).__name__ + ': ' + str(e)",
+    "        result['stdout'] = out.getvalue()",
+    "        return json.dumps(result)",
+    "    try:",
+    "        exec(tests_code, ns)",
+    "    except Exception as e:",
+    "        result['compileError'] = 'Ошибка в проверочном коде: ' + type(e).__name__ + ': ' + str(e)",
+    "        result['stdout'] = out.getvalue()",
+    "        return json.dumps(result)",
+    "    names = sorted(k for k, v in ns.items() if k.startswith('test_') and callable(v))",
+    "    for name in names:",
+    "        try:",
+    "            with contextlib.redirect_stdout(out):",
+    "                ns[name]()",
+    "            result['tests'].append({'name': name, 'passed': True, 'message': ''})",
+    "        except AssertionError as e:",
+    "            result['tests'].append({'name': name, 'passed': False, 'message': str(e) or 'Условие не выполнено'})",
+    "        except Exception as e:",
+    "            result['tests'].append({'name': name, 'passed': False, 'message': type(e).__name__ + ': ' + str(e)})",
+    "    result['stdout'] = out.getvalue()",
+    "    return json.dumps(result)"
+  ].join("\n");
+
+  var pyodidePromise = null;
+  function ensurePyodide(onStatus){
+    if(pyodidePromise) return pyodidePromise;
+    pyodidePromise = new Promise(function(resolve, reject){
+      if(onStatus) onStatus('Загружаю Python в браузере (Pyodide)… обычно 10-20 секунд в первый раз.');
+      var script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js';
+      script.onload = function(){
+        loadPyodide().then(function(pyodide){
+          pyodide.runPython(PY_RUNNER_SRC);
+          resolve(pyodide);
+        }).catch(reject);
+      };
+      script.onerror = function(){ reject(new Error('не удалось загрузить Pyodide с CDN')); };
+      document.head.appendChild(script);
+    });
+    return pyodidePromise;
+  }
+
+  function buildPlayground(page, onAllPass){
+    var ex = page.exercise;
+    var box = document.createElement('div');
+    box.className = 'pg';
+
+    var storeKey = 'qa-course-code-' + page.id;
+    var savedCode = null;
+    try{ savedCode = localStorage.getItem(storeKey); }catch(e){}
+
+    var editorId = 'pg-editor-' + page.id + '-' + Math.random().toString(36).slice(2, 7);
+    box.innerHTML =
+      '<p class="pg-prompt">'+escapeHtml(ex.prompt)+'</p>' +
+      '<div class="pg-editor" id="'+editorId+'"></div>' +
+      '<div class="pg-toolbar">' +
+        '<button type="button" class="btn" id="pg-run">▶ Запустить</button>' +
+        '<button type="button" class="btn" id="pg-reset">Сбросить код</button>' +
+        '<span class="pg-status" id="pg-status"></span>' +
+      '</div>' +
+      '<div class="pg-output" id="pg-output"></div>';
+
+    var cm = CodeMirror(box.querySelector('#'+editorId), {
+      value: savedCode || ex.starter,
+      mode: 'python',
+      lineNumbers: true,
+      indentUnit: 4,
+      tabSize: 4,
+      indentWithTabs: false,
+      viewportMargin: Infinity,
+      extraKeys: { Tab: function(cmInst){ cmInst.replaceSelection('    '); } }
+    });
+    cm.on('change', function(){
+      try{ localStorage.setItem(storeKey, cm.getValue()); }catch(e){}
+    });
+    box._cm = cm;
+
+    var runBtn = box.querySelector('#pg-run');
+    var resetBtn = box.querySelector('#pg-reset');
+    var statusEl = box.querySelector('#pg-status');
+    var outputEl = box.querySelector('#pg-output');
+
+    resetBtn.addEventListener('click', function(){
+      cm.setValue(ex.starter);
+      try{ localStorage.removeItem(storeKey); }catch(e){}
+      outputEl.innerHTML = '';
+      statusEl.textContent = '';
+    });
+
+    function renderResult(result){
+      if(result.compileError){
+        outputEl.innerHTML = '<div class="gate-feedback bad">'+escapeHtml(result.compileError)+'</div>' +
+          (result.stdout ? '<div class="pg-stdout">'+escapeHtml(result.stdout)+'</div>' : '');
+        return;
+      }
+      if(!result.tests.length){
+        outputEl.innerHTML = '<div class="gate-feedback bad">Не найдено ни одной проверки в этом упражнении.</div>';
+        return;
+      }
+      var passedCount = result.tests.filter(function(t){ return t.passed; }).length;
+      var allPassed = passedCount === result.tests.length;
+      var rows = result.tests.map(function(t){
+        return '<div class="pg-test-row '+(t.passed?'pass':'fail')+'">' +
+          '<span class="pg-test-mark">'+(t.passed?'✓':'✗')+'</span>' +
+          '<span><div>'+escapeHtml(t.name)+'</div>' +
+          (t.passed ? '' : '<div class="pg-test-msg">'+escapeHtml(t.message)+'</div>') +
+          '</span></div>';
+      }).join('');
+      outputEl.innerHTML = rows +
+        (result.stdout ? '<div class="pg-stdout">'+escapeHtml(result.stdout)+'</div>' : '') +
+        '<p class="pg-summary '+(allPassed?'ok':'bad')+'">'+passedCount+' / '+result.tests.length+' проверок пройдено'+(allPassed?' — отлично!':'')+'</p>';
+      if(allPassed) onAllPass();
+    }
+
+    runBtn.addEventListener('click', function(){
+      runBtn.disabled = true;
+      outputEl.innerHTML = '';
+      statusEl.textContent = 'Запускаю…';
+      ensurePyodide(function(msg){ statusEl.textContent = msg; }).then(function(pyodide){
+        statusEl.textContent = 'Выполняю код…';
+        var code = cm.getValue();
+        pyodide.globals.set('__student_code', code);
+        pyodide.globals.set('__tests_code', ex.tests);
+        var resultJson;
+        try{
+          resultJson = pyodide.runPython('__run_checks(__student_code, __tests_code)');
+        }catch(e){
+          statusEl.textContent = '';
+          outputEl.innerHTML = '<div class="gate-feedback bad">Внутренняя ошибка запуска: '+escapeHtml(String(e))+'</div>';
+          runBtn.disabled = false;
+          return;
+        }
+        statusEl.textContent = '';
+        renderResult(JSON.parse(resultJson));
+        runBtn.disabled = false;
+      }).catch(function(e){
+        statusEl.textContent = '';
+        outputEl.innerHTML = '<div class="gate-feedback bad">Не получилось загрузить Python в браузере: '+escapeHtml(String(e))+'. Проверь интернет-соединение и попробуй ещё раз.</div>';
+        runBtn.disabled = false;
+      });
+    });
+
+    return box;
+  }
+
   // ---------- gate: mini-task self-check + sequential quiz questions ----------
   function buildGate(page){
     var quiz = page.quiz; // array of {question, options, correct, explain} or undefined
-    if(!quiz && !page.hasPractice) return null;
+    var exercise = page.exercise; // {prompt, starter, tests} or undefined
+    if(!quiz && !page.hasPractice && !exercise) return null;
 
     var wrap = document.createElement('div');
     wrap.className = 'gate';
@@ -778,9 +988,24 @@
     if(isDone(page.id)){
       wrap.innerHTML =
         '<p class="gate-title">✓ Проверка урока</p>' +
-        '<p class="gate-done">Мини-задание и тест ('+(quiz?quiz.length:0)+(quiz?' вопр.':'')+') пройдены</p>' +
+        '<p class="gate-done">'+(exercise?'Код-задание':'Мини-задание')+' и тест ('+(quiz?quiz.length:0)+(quiz?' вопр.':'')+') пройдены</p>' +
+        (exercise ? '<button type="button" class="btn gate-check-btn" id="gate-pg-reopen">Открыть код ещё раз</button><div id="gate-pg-reopen-box" hidden></div>' : '') +
         (quiz ? '<button type="button" class="btn gate-check-btn" id="gate-review-btn">Показать вопросы ещё раз</button>' +
                 '<div id="gate-review" hidden></div>' : '');
+      if(exercise){
+        var reopenBtn = wrap.querySelector('#gate-pg-reopen');
+        var reopenBox = wrap.querySelector('#gate-pg-reopen-box');
+        reopenBtn.addEventListener('click', function(){
+          reopenBox.hidden = !reopenBox.hidden;
+          if(!reopenBox.hidden && !reopenBox.dataset.filled){
+            reopenBox.dataset.filled = '1';
+            reopenBox.style.marginTop = '14px';
+            var pgBox = buildPlayground(page, function(){});
+            reopenBox.appendChild(pgBox);
+            pgBox._cm.refresh();
+          }
+        });
+      }
       if(quiz){
         var reviewBtn = wrap.querySelector('#gate-review-btn');
         var reviewBox = wrap.querySelector('#gate-review');
@@ -802,19 +1027,23 @@
       return wrap;
     }
 
-    var practiceChecked = !page.hasPractice;
+    var practiceChecked = !page.hasPractice && !exercise;
     var quizPassed = !quiz;
     var qIndex = 0;
 
     var html = '<p class="gate-title">Проверка урока</p>';
-    if(page.hasPractice){
+    if(exercise){
+      html += '<div class="gate-row" id="gate-exercise-row"></div>';
+    } else if(page.hasPractice){
       html += '<div class="gate-row"><label class="gate-check"><input type="checkbox" id="gate-practice"> Я выполнил(а) мини-задание из этого урока</label></div>';
     }
     if(quiz){
       html += '<div class="gate-row" id="gate-quiz-row"></div>';
     }
     html += '<p class="gate-hint">Следующий урок откроется, когда ' +
-      (page.hasPractice && quiz ? 'чекбокс отмечен и все вопросы решены верно.' : quiz ? 'все вопросы решены верно.' : 'чекбокс отмечен.') +
+      (exercise && quiz ? 'код проходит все проверки и все вопросы решены верно.' :
+       exercise ? 'код проходит все проверки.' :
+       page.hasPractice && quiz ? 'чекбокс отмечен и все вопросы решены верно.' : quiz ? 'все вопросы решены верно.' : 'чекбокс отмечен.') +
       '</p>';
     wrap.innerHTML = html;
 
@@ -825,7 +1054,14 @@
       }
     }
 
-    if(page.hasPractice){
+    if(exercise){
+      var exBox = buildPlayground(page, function(){
+        practiceChecked = true;
+        tryComplete();
+      });
+      wrap.querySelector('#gate-exercise-row').appendChild(exBox);
+      wrap._cm = exBox._cm;
+    } else if(page.hasPractice){
       wrap.querySelector('#gate-practice').addEventListener('change', function(ev){
         practiceChecked = ev.target.checked;
         tryComplete();
