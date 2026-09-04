@@ -109,4 +109,8 @@ def test_get_user_not_found(users_client: UsersClient):
 
 ## Мини-задание
 
-Добавь в свой форк новый метод `find_user_by_username(self, username: str) -> UserSchema | None` в `UsersClient` — по тому же паттерну, что и остальные методы класса. Он должен вызвать уже существующий `get_users_api()`, пройтись по списку пользователей из `response.json()` и вернуть того, чей `username` совпадает с переданным (`UserSchema(**matching_dict)`), либо `None`, если такого нет. Проверь его в отдельном скрипте на реальном username с `https://jsonplaceholder.typicode.com/users` (например, `"Bret"`).
+Добавь в свой форк новый метод `find_user_by_username(self, username: str) -> UserSchema | None` в `UsersClient` — по тому же паттерну, что и остальные методы класса. Он должен вызвать уже существующий `get_users_api()`, пройтись по списку пользователей из `response.json()` и вернуть того, чей `username` совпадает с переданным, либо `None`, если такого нет.
+
+Чтобы превратить найденный словарь `matching_dict` в объект `UserSchema`, используй `UserSchema(**matching_dict)` — запись `**dict` распаковывает словарь в именованные аргументы конструктора модели (`id=..., name=..., username=...` и т.д.). Как это устроено внутри и какие ещё есть способы создать Pydantic-модель, подробно разберём в следующем уроке (3.9) — сейчас достаточно знать эту одну готовую конструкцию.
+
+Проверь метод в отдельном скрипте на реальном username с `https://jsonplaceholder.typicode.com/users` (например, `"Bret"`).
