@@ -107,4 +107,6 @@ print(response.status_code, response.json())
 
 ## Мини-задание
 
-В интерактивной консоли Python (или отдельном скрипте) создай `APIClient` через `build_http_session` с `base_url="https://jsonplaceholder.typicode.com"`. Вызови `client.get("/users")`, `client.get("/users/1")` и `client.post("/posts", json={"title": "x"})`. Убедись, что во всех случаях путь подставляется относительный, а полный URL собирается автоматически.
+До того как заглянуть в готовый `APIClient`/`BaseUrlSession` из теории выше, — попробуй сам. Напиши в отдельном скрипте маленький класс `SimpleClient`: конструктор принимает `base_url` и сохраняет его, метод `get(path)` делает `requests.get(...)` на `base_url + path`, метод `post(path, json)` — аналогично `requests.post(...)`. Проверь его на `client.get("/users/1")` и `client.post("/posts", json={"title": "x"})` — оба вызова должны реально сходить в сеть и вернуть ответ.
+
+Теперь сравни свой `SimpleClient` с настоящим `APIClient`/`BaseUrlSession`: что он делает так же, а что — иначе (единая точка для всех методов через `request`, таймаут по умолчанию)? Переписывать свой класс под эталон не нужно — важно осознанно увидеть разницу, а не просто прочитать чужой код.

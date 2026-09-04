@@ -511,9 +511,67 @@
   .hljs-addition{background:rgba(31,111,92,.15);}
   .hljs-emphasis{font-style:italic;}
   .hljs-strong{font-weight:700;}
+
+  /* ---------- auth gate ---------- */
+  .auth-gate{
+    position:fixed;inset:0;z-index:50;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--paper);
+  }
+  .auth-box{
+    width:min(360px, 90vw);
+    display:flex;flex-direction:column;gap:12px;
+    padding:28px 26px;border:1px solid var(--line);border-radius:10px;
+    background:var(--surface);box-shadow:var(--shadow);
+  }
+  .auth-hint{margin:0 0 4px;color:var(--muted);font-size:13.5px;}
+  .auth-input{
+    font:inherit;font-family:'JetBrains Mono', monospace;font-size:13.5px;
+    padding:10px 12px;border:1px solid var(--line);border-radius:6px;
+    background:var(--paper);color:var(--ink);
+  }
+  .auth-input:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .auth-error{margin:0;color:var(--danger);font-size:12.5px;}
+  .btn-accent{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);}
+
+  /* ---------- teacher dashboard ---------- */
+  .teacher-dash{position:fixed;inset:0;z-index:40;overflow:auto;background:var(--paper);}
+  .teacher-dash-inner{max-width:960px;margin:0 auto;padding:40px 24px 80px;}
+  .teacher-dash-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .teacher-table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px;}
+  .teacher-table th, .teacher-table td{
+    text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);
+  }
+  .teacher-table th{color:var(--muted);font-weight:600;font-family:'JetBrains Mono', monospace;font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
+  .teacher-table td.mono{font-family:'JetBrains Mono', monospace;font-size:12.5px;}
+  .user-badge{color:var(--muted);font-size:12px;margin-right:2px;white-space:nowrap;}
 </style>
 
-<div class="app">
+<div class="auth-gate" id="auth-gate" hidden>
+  <form class="auth-box" id="auth-form">
+    <div class="brand-title"><span class="dot"></span>QA AUTOMATION COURSE</div>
+    <p class="auth-hint">Войдите, чтобы продолжить курс</p>
+    <input class="auth-input" id="auth-email" type="email" placeholder="Email" autocomplete="username" required>
+    <input class="auth-input" id="auth-password" type="password" placeholder="Пароль" autocomplete="current-password" required>
+    <button class="btn btn-accent" type="submit" id="auth-submit">Войти</button>
+    <p class="auth-error" id="auth-error" hidden></p>
+  </form>
+</div>
+
+<div class="teacher-dash" id="teacher-dash" hidden>
+  <div class="teacher-dash-inner">
+    <div class="teacher-dash-head">
+      <div class="brand-title"><span class="dot"></span>Прогресс учеников</div>
+      <div class="header-actions">
+        <span class="user-badge mono" id="teacher-badge"></span>
+        <button class="btn" id="teacher-logout-btn">Выйти</button>
+      </div>
+    </div>
+    <table class="teacher-table" id="teacher-table"></table>
+  </div>
+</div>
+
+<div class="app" id="app-root" hidden>
   <div class="scrim" id="scrim"></div>
   <aside class="sidebar" id="sidebar">
     <div class="brand">
@@ -535,6 +593,8 @@
       <button class="btn icon menu-btn" id="menu-btn" aria-label="Открыть оглавление">☰</button>
       <div class="crumb" id="crumb"></div>
       <div class="header-actions">
+        <span class="user-badge mono" id="user-badge"></span>
+        <button class="btn icon" id="logout-btn" title="Выйти">⏻</button>
         <button class="btn" id="done-btn"></button>
       </div>
     </div>
@@ -553,10 +613,29 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
 <script>
-(function(){
-  "use strict";
+"use strict";
 
-  var PAGES = JSON.parse(document.getElementById('course-data').textContent);
+var PAGES = JSON.parse(document.getElementById('course-data').textContent);
+
+// ---------- маленький fetch-клиент к своему /api (Vercel Functions + Neon) ----------
+function api(path, opts){
+  opts = opts || {};
+  return fetch('/api' + path, {
+    method: opts.method || 'GET',
+    credentials: 'same-origin',
+    headers: opts.body ? {'Content-Type':'application/json'} : undefined,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  }).then(function(r){
+    if(r.status === 204) return {ok:true};
+    return r.json().then(function(data){
+      if(!r.ok){ var e = new Error(data.error || ('HTTP ' + r.status)); e.status = r.status; throw e; }
+      return data;
+    });
+  });
+}
+
+function initReader(AUTH){
+  (function(){
   var byId = {};
   PAGES.forEach(function(p){ byId[p.id] = p; });
 
@@ -573,32 +652,13 @@
     }
   });
 
-  // ---------- progress storage ----------
-  var STORE_KEY = 'qa-course-reader-progress-v1';
-  var LAST_KEY = 'qa-course-reader-last-v1';
-
-  function loadProgress(){
-    try{
-      var raw = localStorage.getItem(STORE_KEY);
-      return raw ? JSON.parse(raw) : {};
-    }catch(e){ return {}; }
-  }
-  function saveProgress(p){
-    try{ localStorage.setItem(STORE_KEY, JSON.stringify(p)); }catch(e){}
-  }
-  function loadLast(){
-    try{ return localStorage.getItem(LAST_KEY); }catch(e){ return null; }
-  }
-  function saveLast(id){
-    try{ localStorage.setItem(LAST_KEY, id); }catch(e){}
-  }
-
-  var progress = loadProgress();
+  // ---------- progress storage (свой /api + Neon, через AUTH из bootstrap) ----------
+  var progress = AUTH.progress;
 
   function isDone(id){ return !!progress[id]; }
   function setDone(id, val){
     if(val) progress[id] = true; else delete progress[id];
-    saveProgress(progress);
+    AUTH.persistDone(id, val);
     renderProgress();
     refreshLocks();
     var row = navEl.querySelector('[data-id="'+id+'"]');
@@ -749,7 +809,7 @@
     var page = byId[id];
     if(!page) return;
     currentId = id;
-    saveLast(id);
+    AUTH.persistLast(id);
     if(!opts.fromHash && location.hash.slice(1) !== id){
       try{ history.pushState({id:id}, '', '#'+id); }catch(e){}
     }
@@ -1229,9 +1289,208 @@
 
   // ---------- initial page ----------
   var startId = location.hash.slice(1);
-  if(!startId || !byId[startId]) startId = loadLast();
+  if(!startId || !byId[startId]) startId = AUTH.lastId;
   if(!startId || !byId[startId]) startId = PAGES[0].id;
   try{ history.replaceState({id:startId}, '', '#'+startId); }catch(e){}
   navigate(startId, {fromHash:true});
+
+  // ---------- logout ----------
+  document.getElementById('logout-btn').addEventListener('click', function(){
+    AUTH.signOut();
+  });
+  if(AUTH.badgeText){
+    document.getElementById('user-badge').textContent = AUTH.badgeText;
+  }
+  })();
+}
+
+// =================== auth bootstrap + teacher dashboard ===================
+// Отдельно от initReader: логин, подгрузка прогресса из своего /api (Vercel
+// Functions + Neon) и роль (student -> обычный ридер, teacher -> дашборд
+// ниже) решаются один раз, до того как основной ридер вообще инициализируется.
+
+var LEGACY_STORE_KEY = 'qa-course-reader-progress-v1';
+var LEGACY_LAST_KEY = 'qa-course-reader-last-v1';
+
+function readLegacyLocalProgress(){
+  try{
+    var raw = localStorage.getItem(LEGACY_STORE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function readLegacyLast(){
+  try{ return localStorage.getItem(LEGACY_LAST_KEY); }catch(e){ return null; }
+}
+function clearLegacyLocal(){
+  try{
+    localStorage.removeItem(LEGACY_STORE_KEY);
+    localStorage.removeItem(LEGACY_LAST_KEY);
+  }catch(e){}
+}
+
+function escapeHtmlTD(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function showAuthGate(message){
+  document.getElementById('auth-gate').hidden = false;
+  var errEl = document.getElementById('auth-error');
+  if(message){
+    errEl.textContent = message;
+    errEl.hidden = false;
+  } else {
+    errEl.hidden = true;
+  }
+}
+function hideAuthGate(){
+  document.getElementById('auth-gate').hidden = true;
+}
+
+function signOut(){
+  api('/auth/logout', {method:'POST'}).catch(function(){}).then(function(){ location.reload(); });
+}
+
+function buildAuthState(me){
+  return api('/progress').then(function(progressRes){
+    var progressMap = {};
+    (progressRes.lessonIds || []).forEach(function(id){ progressMap[id] = true; });
+    return {
+      displayName: me.displayName,
+      role: me.role,
+      lastLessonId: me.lastLessonId,
+      progressMap: progressMap
+    };
+  });
+}
+
+// Перенос локального прогресса (с прошлой, безаккаунтной версии ридера) в БД
+// при самом первом входе — чтобы не терять то, что уже было пройдено локально.
+function migrateLegacyIfNeeded(state){
+  if(Object.keys(state.progressMap).length > 0) return state;
+  var legacy = readLegacyLocalProgress();
+  var legacyIds = legacy ? Object.keys(legacy) : [];
+  if(!legacyIds.length) return state;
+  return api('/progress/bulk', {method:'POST', body:{lessonIds: legacyIds}}).then(function(){
+    legacyIds.forEach(function(id){ state.progressMap[id] = true; });
+    var legacyLast = readLegacyLast();
+    if(!legacyLast){ clearLegacyLocal(); return state; }
+    return api('/last-lesson', {method:'POST', body:{lessonId: legacyLast}}).then(function(){
+      state.lastLessonId = legacyLast;
+      clearLegacyLocal();
+      return state;
+    });
+  });
+}
+
+function startForState(state){
+  if(state.role === 'teacher'){
+    document.getElementById('teacher-badge').textContent = state.displayName || '';
+    document.getElementById('teacher-logout-btn').addEventListener('click', signOut);
+    document.getElementById('teacher-dash').hidden = false;
+    renderTeacherDashboard();
+    return;
+  }
+  document.getElementById('app-root').hidden = false;
+  initReader({
+    progress: state.progressMap,
+    lastId: state.lastLessonId,
+    badgeText: state.displayName || '',
+    signOut: signOut,
+    persistDone: function(id, val){
+      api('/progress', {method:'POST', body:{lessonId:id, done:val}}).catch(function(e){ console.error(e); });
+    },
+    persistLast: function(id){
+      api('/last-lesson', {method:'POST', body:{lessonId:id}}).catch(function(e){ console.error(e); });
+    }
+  });
+}
+
+function renderTeacherDashboard(){
+  var moduleOrder = [];
+  PAGES.forEach(function(p){
+    if(moduleOrder.indexOf(p.section) === -1) moduleOrder.push(p.section);
+  });
+  var moduleTotal = {};
+  moduleOrder.forEach(function(m){ moduleTotal[m] = 0; });
+  PAGES.forEach(function(p){ moduleTotal[p.section]++; });
+
+  api('/teacher/students').then(function(data){
+    var students = data.students || [];
+    var rows = data.progress || [];
+    var byUser = {};
+    rows.forEach(function(r){
+      if(!byUser[r.user_id]) byUser[r.user_id] = { done:{}, lastAt:null };
+      byUser[r.user_id].done[r.lesson_id] = true;
+      if(!byUser[r.user_id].lastAt || r.done_at > byUser[r.user_id].lastAt){
+        byUser[r.user_id].lastAt = r.done_at;
+      }
+    });
+
+    var totalAll = PAGES.length;
+    var html = '<thead><tr><th>Ученик</th><th>Всего</th>' +
+      moduleOrder.map(function(m){ return '<th>'+escapeHtmlTD(m)+'</th>'; }).join('') +
+      '<th>Последняя активность</th></tr></thead><tbody>';
+
+    if(!students.length){
+      html += '<tr><td colspan="'+(moduleOrder.length+3)+'">Пока нет ни одного ученика</td></tr>';
+    }
+
+    students.forEach(function(s){
+      var u = byUser[s.id] || { done:{}, lastAt:null };
+      var doneCount = Object.keys(u.done).length;
+      html += '<tr><td>'+escapeHtmlTD(s.display_name || s.email)+'</td>' +
+        '<td class="mono">'+doneCount+' / '+totalAll+'</td>' +
+        moduleOrder.map(function(m){
+          var done = 0;
+          PAGES.forEach(function(p){ if(p.section === m && u.done[p.id]) done++; });
+          return '<td class="mono">'+done+'/'+moduleTotal[m]+'</td>';
+        }).join('') +
+        '<td class="mono">'+(u.lastAt ? new Date(u.lastAt).toLocaleString('ru-RU') : '—')+'</td></tr>';
+    });
+    html += '</tbody>';
+    document.getElementById('teacher-table').innerHTML = html;
+  }).catch(function(e){
+    document.getElementById('teacher-table').innerHTML = '<tbody><tr><td>Не удалось загрузить: '+escapeHtmlTD(e.message)+'</td></tr></tbody>';
+  });
+}
+
+function onSignedIn(me){
+  buildAuthState(me)
+    .then(migrateLegacyIfNeeded)
+    .then(startForState)
+    .catch(function(e){
+      console.error(e);
+      showAuthGate('Не удалось загрузить профиль: ' + e.message);
+    });
+}
+
+(function bootstrap(){
+  document.getElementById('auth-form').addEventListener('submit', function(ev){
+    ev.preventDefault();
+    var email = document.getElementById('auth-email').value.trim();
+    var password = document.getElementById('auth-password').value;
+    var errEl = document.getElementById('auth-error');
+    errEl.hidden = true;
+    var submitBtn = document.getElementById('auth-submit');
+    submitBtn.disabled = true;
+    api('/auth/login', {method:'POST', body:{email:email, password:password}}).then(function(me){
+      submitBtn.disabled = false;
+      hideAuthGate();
+      onSignedIn(me);
+    }).catch(function(e){
+      submitBtn.disabled = false;
+      errEl.textContent = e.message;
+      errEl.hidden = false;
+    });
+  });
+
+  api('/me').then(function(me){
+    hideAuthGate();
+    onSignedIn(me);
+  }).catch(function(){
+    showAuthGate();
+  });
 })();
 </script>

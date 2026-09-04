@@ -138,4 +138,4 @@ class UserSchema(BaseModel):
 
 ## Мини-задание
 
-Перепиши `CompanySchema` из примера так, чтобы поле называлось `catch_phrase` (snake_case) с `Field(alias="catchPhrase")`. Получи реального пользователя через `users_client.get_user(user_id=1)` (после того как внесёшь изменение локально, не в общем репозитории) и убедись, что `user.company.catch_phrase` работает так же, как раньше работал `user.company.catchPhrase`. Верни файл в исходное состояние после эксперимента — модель менять в общем репозитории пока не нужно.
+В отдельном scratch-скрипте (не в общем репозитории) объяви свою копию модели — только сам класс, не весь файл: `class MyCompanySchema(BaseModel): name: str; catch_phrase: str = Field(alias="catchPhrase"); bs: str`. Получи реального пользователя через `requests.get("https://jsonplaceholder.typicode.com/users/1")`, возьми `response.json()["company"]` и создай из него модель: `MyCompanySchema(**response.json()["company"])`. Убедись, что `company.catch_phrase` работает так же, как в оригинальной схеме работал `company.catchPhrase`. Ничего в общем репозитории менять и откатывать не нужно — весь эксперимент живёт в твоём отдельном файле.

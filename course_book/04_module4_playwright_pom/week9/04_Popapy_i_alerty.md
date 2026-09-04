@@ -72,4 +72,4 @@ page.locator("[data-testid='delete-account-button']").click()
 
 ## Мини-задание
 
-Открой DevTools на любом сайте, где есть модальное окно (например, окно подтверждения удаления, cookie-баннер или окно логина, открывающееся поверх страницы). Определи, элемент ли это HTML-разметки (случай 3) или, наоборот, нативный browser-диалог. Обоснуй вывод тем, что видишь во вкладке Elements.
+Открой `https://the-internet.herokuapp.com/javascript_alerts` — учебная страница с тремя кнопками, каждая вызывает нативный диалог браузера. Напиши Playwright-скрипт: сначала кликни по кнопке "Click for JS Alert" БЕЗ зарегистрированного `page.on("dialog", ...)` — по теории выше Playwright должен закрыть диалог сам. Затем зарегистрируй обработчик с `dialog.accept()` и кликни ещё раз — проверь через `expect(page.locator("#result")).to_have_text("You successfully clicked an alert")`. Повтори для кнопки "Click for JS Confirm", но один раз прими диалог (`dialog.accept()`) и проверь `#result` на текст `"You clicked: Ok"`, а другой раз — отклони (`dialog.dismiss()`) и проверь `"You clicked: Cancel"`.

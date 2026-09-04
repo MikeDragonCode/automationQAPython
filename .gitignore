@@ -7,3 +7,6 @@ allure-results/
 allure-report/
 node_modules/
 .vercel
+.env
+.env.local
+.env*.local

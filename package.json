@@ -1,0 +1,13 @@
+{
+  "name": "qa-automation-course-api",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Vercel serverless API for the reader: login, progress, teacher dashboard — backed by Neon Postgres.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4"
+  }
+}

@@ -66,3 +66,5 @@ curl -X DELETE https://jsonplaceholder.typicode.com/users/1           # DELETE
 ## Мини-задание
 
 Открой документацию любого публичного API (например, [jsonplaceholder.typicode.com](https://jsonplaceholder.typicode.com/guide/)) и выпиши для ресурса `/posts` все доступные методы и что каждый из них должен делать. Отметь для себя, какие из них идемпотентны.
+
+Затем проверь себя на практике: отправь `curl`-ом (или через `requests`) `GET`, `PUT`, `PATCH` и `DELETE` на `https://jsonplaceholder.typicode.com/posts/1`, а `POST` — на `https://jsonplaceholder.typicode.com/posts` (обрати внимание: у POST другой адрес — он создаёт новый ресурс в коллекции, а не действует на конкретный `/posts/1`). Запиши рядом с каждым методом из своего списка реальный статус-код и краткое содержание ответа, которые вернул сервер. Сверь с тем, что ты предсказал по документации, — совпало или нет?

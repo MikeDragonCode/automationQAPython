@@ -109,4 +109,4 @@ def test_get_user_not_found(users_client: UsersClient):
 
 ## Мини-задание
 
-Без изменения файлов репозитория, в отдельном скрипте импортируй `get_users_client`, вызови `get_users_api()` и распечатай `response.status_code` и длину списка `response.json()`. Затем вызови `get_user(user_id=1)` и распечатай `user.email` — обрати внимание, что это уже не словарь, а объект с атрибутами.
+Добавь в свой форк новый метод `find_user_by_username(self, username: str) -> UserSchema | None` в `UsersClient` — по тому же паттерну, что и остальные методы класса. Он должен вызвать уже существующий `get_users_api()`, пройтись по списку пользователей из `response.json()` и вернуть того, чей `username` совпадает с переданным (`UserSchema(**matching_dict)`), либо `None`, если такого нет. Проверь его в отдельном скрипте на реальном username с `https://jsonplaceholder.typicode.com/users` (например, `"Bret"`).
