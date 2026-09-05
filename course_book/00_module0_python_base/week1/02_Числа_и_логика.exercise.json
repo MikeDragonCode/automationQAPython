@@ -1,5 +1,24 @@
 {
-  "prompt": "Дан заказ на сумму price = 2450 рублей со скидкой discount = 12 (в процентах). Посчитай итоговую сумму с учётом скидки, округлённую до копеек, и сохрани в переменную total. Затем для actual_status = 304 сохрани в переменную is_ok_status результат составного условия: actual_status находится в диапазоне [200; 299] или равен 304.",
-  "starter": "price = 2450\ndiscount = 12\n\n# TODO: итоговая сумма с учётом скидки, округлённая до копеек (round(..., 2))\ntotal = None\n\nactual_status = 304\n\n# TODO: True, если actual_status в диапазоне [200; 299] или равен 304\nis_ok_status = None\n",
-  "tests": "def test_total_value():\n    assert total == 2156.0, f\"ожидалось 2156.0, получено {total}\"\n\n\ndef test_total_is_rounded():\n    assert round(total, 2) == total, \"результат должен быть округлён до копеек (2 знака после запятой)\"\n\n\ndef test_is_ok_status_true_for_304():\n    assert is_ok_status is True, \"304 входит в разрешённые статусы, ожидается True\"\n\n\ndef test_is_ok_status_is_bool():\n    assert isinstance(is_ok_status, bool), \"is_ok_status должен быть именно bool (True/False), а не число\"\n"
+  "exercises": [
+    {
+      "prompt": "Даны a = 17 и b = 5. Посчитай quotient (целочисленное деление a на b), remainder (остаток от деления a на b) и power (a в степени 2).",
+      "starter": "a = 17\nb = 5\n\n# TODO: целочисленное деление a на b\nquotient = None\n# TODO: остаток от деления a на b\nremainder = None\n# TODO: a в степени 2\npower = None\n",
+      "tests": "def test_quotient():\n    assert quotient == 3, f\"ожидалось quotient=3, получено {quotient}\"\n\n\ndef test_remainder():\n    assert remainder == 2, f\"ожидалось remainder=2, получено {remainder}\"\n\n\ndef test_power():\n    assert power == 289, f\"ожидалось power=289, получено {power}\"\n"
+    },
+    {
+      "prompt": "Дан заказ на сумму price = 2450 рублей со скидкой discount = 12 (в процентах). Посчитай итоговую сумму с учётом скидки, округлённую до копеек, и сохрани в переменную total. Затем для actual_status = 304 сохрани в переменную is_ok_status результат составного условия: actual_status находится в диапазоне [200; 299] или равен 304.",
+      "starter": "price = 2450\ndiscount = 12\n\n# TODO: итоговая сумма с учётом скидки, округлённая до копеек (round(..., 2))\ntotal = None\n\nactual_status = 304\n\n# TODO: True, если actual_status в диапазоне [200; 299] или равен 304\nis_ok_status = None\n",
+      "tests": "def test_total_value():\n    assert total == 2156.0, f\"ожидалось 2156.0, получено {total}\"\n\n\ndef test_total_is_rounded():\n    assert round(total, 2) == total, \"результат должен быть округлён до копеек (2 знака после запятой)\"\n\n\ndef test_is_ok_status_true_for_304():\n    assert is_ok_status is True, \"304 входит в разрешённые статусы, ожидается True\"\n\n\ndef test_is_ok_status_is_bool():\n    assert isinstance(is_ok_status, bool), \"is_ok_status должен быть именно bool (True/False), а не число\"\n"
+    },
+    {
+      "prompt": "SLA на ответ сервера — sla_ms = 500. Фактическое время ответа — actual_ms = 580. Если запрос повторный (is_retry = True), допускается превышение SLA на 20%. Посчитай effective_sla (обычный sla_ms или увеличенный на 20%, если is_retry) и is_within_sla — уложился ли actual_ms в effective_sla.",
+      "starter": "sla_ms = 500\nactual_ms = 580\nis_retry = True\n\n# TODO: effective_sla — sla_ms, увеличенный на 20%, если is_retry, иначе просто sla_ms\neffective_sla = None\n\n# TODO: True, если actual_ms уложился в effective_sla\nis_within_sla = None\n",
+      "tests": "def test_effective_sla():\n    assert effective_sla == 600.0, f\"при is_retry=True SLA увеличивается на 20% (500 * 1.2 = 600), получено {effective_sla}\"\n\n\ndef test_is_within_sla_true():\n    assert is_within_sla is True, \"580 <= 600, значит is_within_sla должен быть True\"\n\n\ndef test_is_within_sla_is_bool():\n    assert isinstance(is_within_sla, bool), \"is_within_sla должен быть именно bool\"\n"
+    },
+    {
+      "prompt": "total_a = 0.1 + 0.1 + 0.1, total_b = 0.3. Сохрани в naive_equal результат сравнения total_a == total_b напрямую, а в safe_equal — результат сравнения через допустимую погрешность abs(total_a - total_b) < 1e-9.",
+      "starter": "total_a = 0.1 + 0.1 + 0.1\ntotal_b = 0.3\n\n# TODO: прямое сравнение через ==\nnaive_equal = None\n\n# TODO: сравнение через допустимую погрешность (abs(total_a - total_b) < 1e-9)\nsafe_equal = None\n",
+      "tests": "def test_naive_equal_is_false():\n    assert naive_equal is False, \"из-за погрешности хранения float, 0.1 + 0.1 + 0.1 не равно 0.3 напрямую через ==\"\n\n\ndef test_safe_equal_is_true():\n    assert safe_equal is True, \"сравнение через допустимую погрешность (abs(a - b) < 1e-9) должно считать числа равными\"\n\n\ndef test_naive_and_safe_differ():\n    assert naive_equal != safe_equal, \"naive_equal и safe_equal должны отличаться — в этом весь смысл задания\"\n"
+    }
+  ]
 }

@@ -1,5 +1,24 @@
 {
-  "prompt": "В уроке предлагается разнести calculate_discount(price, percent) в отдельный модуль calculators.py и импортировать её в main.py. В песочнице нет файловой системы и реального import, поэтому здесь ты проверяешь саму функцию calculate_discount(price, percent), которую в реальном проекте вынес бы в модуль.",
-  "starter": "def calculate_discount(price, percent):\n    # верни цену со скидкой percent процентов\n    pass\n",
-  "tests": "def test_discount_basic():\n    assert calculate_discount(1000, 10) == 900, \"скидка 10% от 1000 должна давать 900\"\n\n\ndef test_discount_zero_percent():\n    assert calculate_discount(500, 0) == 500, \"при скидке 0% цена не должна меняться\"\n\n\ndef test_discount_full():\n    assert calculate_discount(200, 100) == 0, \"при скидке 100% итоговая цена должна быть 0\"\n\n\ndef test_discount_float_result():\n    assert calculate_discount(150, 20) == 120, \"скидка 20% от 150 должна давать 120\"\n"
+  "exercises": [
+    {
+      "prompt": "Разминка. Напиши функцию module_name_from_filename(filename), которая по имени файла (например, 'calculators.py') возвращает имя модуля без расширения ('calculators').",
+      "starter": "def module_name_from_filename(filename):\n    # TODO: верни имя файла без расширения \".py\" (например, \"calculators.py\" -> \"calculators\")\n    pass\n",
+      "tests": "def test_simple_filename():\n    assert module_name_from_filename(\"calculators.py\") == \"calculators\", \"имя модуля - это имя файла без .py\"\n\n\ndef test_filename_with_underscore():\n    assert module_name_from_filename(\"base_page.py\") == \"base_page\", \"подчёркивания в имени файла должны сохраниться\"\n"
+    },
+    {
+      "prompt": "В уроке предлагается разнести calculate_discount(price, percent) в отдельный модуль calculators.py и импортировать её в main.py. В песочнице нет файловой системы и реального import, поэтому здесь ты проверяешь саму функцию calculate_discount(price, percent), которую в реальном проекте вынес бы в модуль.",
+      "starter": "def calculate_discount(price, percent):\n    # верни цену со скидкой percent процентов\n    pass\n",
+      "tests": "def test_discount_basic():\n    assert calculate_discount(1000, 10) == 900, \"скидка 10% от 1000 должна давать 900\"\n\n\ndef test_discount_zero_percent():\n    assert calculate_discount(500, 0) == 500, \"при скидке 0% цена не должна меняться\"\n\n\ndef test_discount_full():\n    assert calculate_discount(200, 100) == 0, \"при скидке 100% итоговая цена должна быть 0\"\n\n\ndef test_discount_float_result():\n    assert calculate_discount(150, 20) == 120, \"скидка 20% от 150 должна давать 120\"\n"
+    },
+    {
+      "prompt": "Ближе к практике. Напиши функцию build_import_statement(package, module, name), которая возвращает строку вида 'from pages.base_page import BasePage'.",
+      "starter": "def build_import_statement(package, module, name):\n    # TODO: верни строку вида \"from pages.base_page import BasePage\"\n    pass\n",
+      "tests": "def test_registration_page_import():\n    result = build_import_statement(\"pages\", \"registration_page\", \"RegistrationPage\")\n    assert result == \"from pages.registration_page import RegistrationPage\", f\"должна получиться строка в формате 'from package.module import name': {result}\"\n\n\ndef test_base_page_import():\n    result = build_import_statement(\"pages\", \"base_page\", \"BasePage\")\n    assert result == \"from pages.base_page import BasePage\", f\"должна получиться строка в формате 'from package.module import name': {result}\"\n"
+    },
+    {
+      "prompt": "Со звёздочкой. Напиши функцию has_name_collision(existing_names, imported_names), которая возвращает список имён из existing_names, совпадающих с чем-то в imported_names (порядок - как в existing_names).",
+      "starter": "def has_name_collision(existing_names, imported_names):\n    # TODO: верни список имён из existing_names, которые также есть в imported_names\n    # (порядок - как в existing_names)\n    pass\n",
+      "tests": "def test_collision_found():\n    result = has_name_collision([\"get_users\", \"BASE_URL\"], [\"get_users\", \"format_report\"])\n    assert result == [\"get_users\"], f\"get_users есть в обоих списках, должен попасть в результат: {result}\"\n\n\ndef test_no_collision():\n    assert has_name_collision([\"a\", \"b\"], [\"c\", \"d\"]) == [], \"если совпадений нет, должен вернуться пустой список\"\n\n\ndef test_multiple_collisions_preserve_order():\n    result = has_name_collision([\"x\", \"y\", \"z\"], [\"z\", \"x\"])\n    assert result == [\"x\", \"z\"], f\"порядок в результате должен соответствовать порядку в existing_names: {result}\"\n"
+    }
+  ]
 }

@@ -1,5 +1,24 @@
 {
-  "prompt": "Дана строка line = \"user@example.com:Qwerty123\". Раздели её на email и password по разделителю \":\" (сохрани в переменные email и password). Проверь, что email содержит \"@\" и хотя бы одну точку после \"@\" — результат (True/False) сохрани в is_valid_email. Собери сообщение через f-строку в переменную login_message: \"Login: <email>, password length: <N>\".",
-  "starter": "line = \"user@example.com:Qwerty123\"\n\n# TODO: раздели line на email и password по разделителю \":\"\nemail = None\npassword = None\n\n# TODO: True, если в email есть \"@\" и хотя бы одна точка после \"@\"\nis_valid_email = None\n\n# TODO: собери сообщение через f-строку: \"Login: <email>, password length: <N>\"\nlogin_message = None\n",
-  "tests": "def test_email_and_password_split():\n    assert email == \"user@example.com\", f\"ожидался email 'user@example.com', получено {email}\"\n    assert password == \"Qwerty123\", f\"ожидался password 'Qwerty123', получено {password}\"\n\n\ndef test_is_valid_email():\n    assert is_valid_email is True, \"email 'user@example.com' валиден, ожидается True\"\n\n\ndef test_login_message():\n    assert login_message == \"Login: user@example.com, password length: 9\", f\"получено: {login_message}\"\n"
+  "exercises": [
+    {
+      "prompt": "Дана строка text = \"automation testing\". Сохрани в first_word первые 10 символов (срезом), в last_char — последний символ, в reversed_text — строку, развёрнутую задом наперёд.",
+      "starter": "text = \"automation testing\"\n\n# TODO: первые 10 символов text (срезом)\nfirst_word = None\n# TODO: последний символ text\nlast_char = None\n# TODO: text, развёрнутый задом наперёд\nreversed_text = None\n",
+      "tests": "def test_first_word():\n    assert first_word == \"automation\", f\"ожидалось 'automation', получено {first_word!r}\"\n\n\ndef test_last_char():\n    assert last_char == \"g\", f\"ожидался последний символ 'g', получено {last_char!r}\"\n\n\ndef test_reversed_text():\n    assert reversed_text == \"gnitset noitamotua\", f\"получено {reversed_text!r}\"\n"
+    },
+    {
+      "prompt": "Дана строка line = \"user@example.com:Qwerty123\". Раздели её на email и password по разделителю \":\" (сохрани в переменные email и password). Проверь, что email содержит \"@\" и хотя бы одну точку после \"@\" — результат (True/False) сохрани в is_valid_email. Собери сообщение через f-строку в переменную login_message: \"Login: <email>, password length: <N>\".",
+      "starter": "line = \"user@example.com:Qwerty123\"\n\n# TODO: раздели line на email и password по разделителю \":\"\nemail = None\npassword = None\n\n# TODO: True, если в email есть \"@\" и хотя бы одна точка после \"@\"\nis_valid_email = None\n\n# TODO: собери сообщение через f-строку: \"Login: <email>, password length: <N>\"\nlogin_message = None\n",
+      "tests": "def test_email_and_password_split():\n    assert email == \"user@example.com\", f\"ожидался email 'user@example.com', получено {email}\"\n    assert password == \"Qwerty123\", f\"ожидался password 'Qwerty123', получено {password}\"\n\n\ndef test_is_valid_email():\n    assert is_valid_email is True, \"email 'user@example.com' валиден, ожидается True\"\n\n\ndef test_login_message():\n    assert login_message == \"Login: user@example.com, password length: 9\", f\"получено: {login_message}\"\n"
+    },
+    {
+      "prompt": "Дана строка лога log = \"  [ERROR] status=500 duration=1234ms  \". Убери пробелы по краям в clean_log. Проверь через in, что в clean_log есть подстрока \"ERROR\" — сохрани в has_error. Вырежи число миллисекунд между \"duration=\" и \"ms\" в duration_ms (int). Собери сообщение message вида \"Duration: 1.23 sec\" (перевод миллисекунд в секунды, два знака после запятой).",
+      "starter": "log = \"  [ERROR] status=500 duration=1234ms  \"\n\n# TODO: убери пробелы по краям\nclean_log = None\n\n# TODO: True, если в clean_log есть подстрока \"ERROR\"\nhas_error = None\n\n# TODO: число миллисекунд между \"duration=\" и \"ms\", как int\nduration_ms = None\n\n# TODO: \"Duration: X.XX sec\" — duration_ms переведи в секунды, округли до 2 знаков через :.2f\nmessage = None\n",
+      "tests": "def test_clean_log_stripped():\n    assert clean_log == \"[ERROR] status=500 duration=1234ms\", f\"строка должна быть без пробелов по краям, получено {clean_log!r}\"\n\n\ndef test_has_error():\n    assert has_error is True, \"в строке есть подстрока 'ERROR', has_error должен быть True\"\n\n\ndef test_duration_ms():\n    assert duration_ms == 1234, f\"ожидалось duration_ms=1234, получено {duration_ms}\"\n\n\ndef test_message_format():\n    assert message == \"Duration: 1.23 sec\", f\"получено {message!r}\"\n"
+    },
+    {
+      "prompt": "raw_value = \"expected_result\\n\" (как будто прочитано из файла), expected = \"expected_result\". Сохрани в raw_equal результат сравнения raw_value == expected без обработки. Сохрани в stripped_equal результат сравнения raw_value.strip() == expected.",
+      "starter": "raw_value = \"expected_result\\n\"\nexpected = \"expected_result\"\n\n# TODO: сравнение raw_value и expected напрямую, без обработки\nraw_equal = None\n\n# TODO: сравнение raw_value.strip() и expected\nstripped_equal = None\n",
+      "tests": "def test_raw_equal_is_false():\n    assert raw_equal is False, \"raw_value содержит лишний '\\\\n' на конце, поэтому прямое сравнение с expected должно быть False\"\n\n\ndef test_stripped_equal_is_true():\n    assert stripped_equal is True, \"после .strip() лишний перенос строки убирается, сравнение должно быть True\"\n"
+    }
+  ]
 }

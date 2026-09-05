@@ -342,8 +342,8 @@
     font-size:13px;line-height:1.6;
   }
 
-  .article table{border-collapse:collapse;width:100%;margin:0 0 20px;font-size:14.5px;}
-  .article table{overflow-x:auto;display:block;}
+  .table-wrap{overflow-x:auto;margin:0 0 20px;}
+  .article table{border-collapse:collapse;width:100%;margin:0;font-size:14.5px;}
   .article th, .article td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;}
   .article th{background:var(--surface);font-family:'JetBrains Mono', monospace;font-size:12px;text-transform:uppercase;letter-spacing:.03em;}
   .article td code, .article th code{white-space:nowrap;}
@@ -468,6 +468,15 @@
   .pg-summary{font-size:13.5px;font-weight:600;margin:8px 0 0;}
   .pg-summary.ok{color:var(--accent);}
   .pg-summary.bad{color:var(--danger);}
+
+  .pg-stage{border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:14px;}
+  .pg-stage.passed{border-color:var(--accent);}
+  .pg-stage-header{
+    display:flex;align-items:center;gap:8px;
+    font-family:'JetBrains Mono', monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.03em;color:var(--muted);margin-bottom:10px;
+  }
+  .pg-stage-check{color:var(--accent);font-weight:700;text-transform:none;font-family:inherit;font-size:14px;}
 
   /* ---------- Mobile ---------- */
   .menu-btn{display:none;}
@@ -834,6 +843,13 @@ function initReader(AUTH){
       '<p class="kicker">'+escapeHtml(kicker)+'</p>' +
       marked.parse(page.content);
 
+    articleEl.querySelectorAll('table').forEach(function(t){
+      var wrap = document.createElement('div');
+      wrap.className = 'table-wrap';
+      t.parentNode.insertBefore(wrap, t);
+      wrap.appendChild(t);
+    });
+
     articleEl.querySelectorAll('a[href^="#p"]').forEach(function(a){
       var targetId = a.getAttribute('href').slice(1);
       a.addEventListener('click', function(ev){
@@ -846,9 +862,9 @@ function initReader(AUTH){
     var gateNode = buildGate(page);
     if(gateNode){
       articleEl.appendChild(gateNode);
-      if(gateNode._cm) gateNode._cm.refresh();
+      if(gateNode._cms) gateNode._cms.forEach(function(cm){ cm.refresh(); });
     }
-    doneBtn.hidden = !!(page.quiz || page.hasPractice || page.exercise);
+    doneBtn.hidden = !!(page.quiz || page.hasPractice || page.exercises);
     if(!doneBtn.hidden) updateDoneBtn();
 
     buildTocRail();
@@ -941,12 +957,11 @@ function initReader(AUTH){
     return pyodidePromise;
   }
 
-  function buildPlayground(page, onAllPass){
-    var ex = page.exercise;
+  function buildPlayground(page, ex, stageIndex, onPass){
     var box = document.createElement('div');
     box.className = 'pg';
 
-    var storeKey = 'qa-course-code-' + page.id;
+    var storeKey = 'qa-course-code-' + page.id + '-' + stageIndex;
     var savedCode = null;
     try{ savedCode = localStorage.getItem(storeKey); }catch(e){}
 
@@ -1010,7 +1025,7 @@ function initReader(AUTH){
       outputEl.innerHTML = rows +
         (result.stdout ? '<div class="pg-stdout">'+escapeHtml(result.stdout)+'</div>' : '') +
         '<p class="pg-summary '+(allPassed?'ok':'bad')+'">'+passedCount+' / '+result.tests.length+' проверок пройдено'+(allPassed?' — отлично!':'')+'</p>';
-      if(allPassed) onAllPass();
+      if(allPassed) onPass();
     }
 
     runBtn.addEventListener('click', function(){
@@ -1044,11 +1059,47 @@ function initReader(AUTH){
     return box;
   }
 
+  // ---------- set of 3-4 progressive code exercises per lesson ----------
+  function buildExerciseSet(page, exercises, onAllPass){
+    var wrap = document.createElement('div');
+    wrap.className = 'pg-flow';
+    var passed = exercises.map(function(){ return false; });
+    var allPassFired = false;
+    var cms = [];
+
+    exercises.forEach(function(ex, i){
+      var stageWrap = document.createElement('div');
+      stageWrap.className = 'pg-stage';
+      var header = document.createElement('div');
+      header.className = 'pg-stage-header';
+      header.innerHTML = '<span>Задание '+(i+1)+' из '+exercises.length+'</span><span class="pg-stage-check" hidden>✓ пройдено</span>';
+      stageWrap.appendChild(header);
+
+      var box = buildPlayground(page, ex, i, function(){
+        if(!passed[i]){
+          passed[i] = true;
+          header.querySelector('.pg-stage-check').hidden = false;
+          stageWrap.classList.add('passed');
+        }
+        if(!allPassFired && passed.every(Boolean)){
+          allPassFired = true;
+          onAllPass();
+        }
+      });
+      stageWrap.appendChild(box);
+      wrap.appendChild(stageWrap);
+      cms.push(box._cm);
+    });
+
+    wrap._cms = cms;
+    return wrap;
+  }
+
   // ---------- gate: mini-task self-check + sequential quiz questions ----------
   function buildGate(page){
     var quiz = page.quiz; // array of {question, options, correct, explain} or undefined
-    var exercise = page.exercise; // {prompt, starter, tests} or undefined
-    if(!quiz && !page.hasPractice && !exercise) return null;
+    var exercises = page.exercises; // array of {prompt, starter, tests} or undefined
+    if(!quiz && !page.hasPractice && !exercises) return null;
 
     var wrap = document.createElement('div');
     wrap.className = 'gate';
@@ -1056,13 +1107,13 @@ function initReader(AUTH){
     if(isDone(page.id)){
       wrap.innerHTML =
         '<p class="gate-title">✓ Проверка урока</p>' +
-        '<p class="gate-done">'+(exercise?'Код-задание':'Мини-задание')+' и тест ('+(quiz?quiz.length:0)+(quiz?' вопр.':'')+') пройдены</p>' +
+        '<p class="gate-done">'+(exercises?'Код-задания ('+exercises.length+')':'Мини-задания')+' и тест ('+(quiz?quiz.length:0)+(quiz?' вопр.':'')+') пройдены</p>' +
         '<div class="gate-done-actions">' +
-        (exercise ? '<button type="button" class="btn gate-check-btn" id="gate-pg-reopen">Открыть код ещё раз</button>' : '') +
+        (exercises ? '<button type="button" class="btn gate-check-btn" id="gate-pg-reopen">Открыть код ещё раз</button>' : '') +
         (quiz ? '<button type="button" class="btn gate-check-btn" id="gate-review-btn">Показать вопросы ещё раз</button>' : '') +
         '<button type="button" class="btn gate-check-btn gate-retake" id="gate-retake">↻ Пройти урок заново</button>' +
         '</div>' +
-        (exercise ? '<div id="gate-pg-reopen-box" hidden></div>' : '') +
+        (exercises ? '<div id="gate-pg-reopen-box" hidden></div>' : '') +
         (quiz ? '<div id="gate-review" hidden></div>' : '');
 
       wrap.querySelector('#gate-retake').addEventListener('click', function(){
@@ -1070,7 +1121,7 @@ function initReader(AUTH){
         navigate(page.id);
       });
 
-      if(exercise){
+      if(exercises){
         var reopenBtn = wrap.querySelector('#gate-pg-reopen');
         var reopenBox = wrap.querySelector('#gate-pg-reopen-box');
         reopenBtn.addEventListener('click', function(){
@@ -1078,9 +1129,9 @@ function initReader(AUTH){
           if(!reopenBox.hidden && !reopenBox.dataset.filled){
             reopenBox.dataset.filled = '1';
             reopenBox.style.marginTop = '14px';
-            var pgBox = buildPlayground(page, function(){});
-            reopenBox.appendChild(pgBox);
-            pgBox._cm.refresh();
+            var setBox = buildExerciseSet(page, exercises, function(){});
+            reopenBox.appendChild(setBox);
+            setBox._cms.forEach(function(cm){ cm.refresh(); });
           }
         });
       }
@@ -1105,22 +1156,22 @@ function initReader(AUTH){
       return wrap;
     }
 
-    var practiceChecked = !page.hasPractice && !exercise;
+    var practiceChecked = !page.hasPractice && !exercises;
     var quizPassed = !quiz;
     var qIndex = 0;
 
     var html = '<p class="gate-title">Проверка урока</p>';
-    if(exercise){
+    if(exercises){
       html += '<div class="gate-row" id="gate-exercise-row"></div>';
     } else if(page.hasPractice){
-      html += '<div class="gate-row"><label class="gate-check"><input type="checkbox" id="gate-practice"> Я выполнил(а) мини-задание из этого урока</label></div>';
+      html += '<div class="gate-row"><label class="gate-check"><input type="checkbox" id="gate-practice"> Я выполнил(а) мини-задания из этого урока</label></div>';
     }
     if(quiz){
       html += '<div class="gate-row" id="gate-quiz-row"></div>';
     }
     html += '<p class="gate-hint">Следующий урок откроется, когда ' +
-      (exercise && quiz ? 'код проходит все проверки и все вопросы решены верно.' :
-       exercise ? 'код проходит все проверки.' :
+      (exercises && quiz ? 'все код-задания проходят проверки и все вопросы решены верно.' :
+       exercises ? 'все код-задания проходят проверки.' :
        page.hasPractice && quiz ? 'чекбокс отмечен и все вопросы решены верно.' : quiz ? 'все вопросы решены верно.' : 'чекбокс отмечен.') +
       '</p>';
     wrap.innerHTML = html;
@@ -1132,13 +1183,13 @@ function initReader(AUTH){
       }
     }
 
-    if(exercise){
-      var exBox = buildPlayground(page, function(){
+    if(exercises){
+      var exSet = buildExerciseSet(page, exercises, function(){
         practiceChecked = true;
         tryComplete();
       });
-      wrap.querySelector('#gate-exercise-row').appendChild(exBox);
-      wrap._cm = exBox._cm;
+      wrap.querySelector('#gate-exercise-row').appendChild(exSet);
+      wrap._cms = exSet._cms;
     } else if(page.hasPractice){
       wrap.querySelector('#gate-practice').addEventListener('change', function(ev){
         practiceChecked = ev.target.checked;

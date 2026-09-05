@@ -1,5 +1,24 @@
 {
-  "prompt": "Дан response_codes = [200, 404, 200, 500, 301, 200, 403]. С помощью генератора списков сохрани в переменную successful_codes только \"успешные\" коды (200-299). Затем обычным циклом for с enumerate() собери в список error_lines строки вида \"index: code\" для каждого элемента, у которого код >= 400 (например, \"1: 404\").",
-  "starter": "response_codes = [200, 404, 200, 500, 301, 200, 403]\n\n# TODO: генератор списков — только коды 200-299\nsuccessful_codes = None\n\n# TODO: обычный цикл for с enumerate() — собери строки \"index: code\" для кодов >= 400\nerror_lines = []\n",
-  "tests": "def test_successful_codes():\n    assert successful_codes == [200, 200, 200], f\"ожидалось [200, 200, 200], получено {successful_codes}\"\n\n\ndef test_error_lines():\n    assert error_lines == [\"1: 404\", \"3: 500\", \"6: 403\"], f\"получено {error_lines}\"\n"
+  "exercises": [
+    {
+      "prompt": "С помощью генератора списков построй список cubes — кубы чисел от 0 до 4 включительно (x ** 3).",
+      "starter": "# TODO: генератор списков — кубы чисел от 0 до 4 включительно\ncubes = None\n",
+      "tests": "def test_cubes():\n    assert cubes == [0, 1, 8, 27, 64], f\"ожидалось [0, 1, 8, 27, 64], получено {cubes}\"\n\n\ndef test_cubes_length():\n    assert len(cubes) == 5, \"cubes должен содержать ровно 5 чисел — для x от 0 до 4 включительно\"\n"
+    },
+    {
+      "prompt": "Дан response_codes = [200, 404, 200, 500, 301, 200, 403]. С помощью генератора списков сохрани в переменную successful_codes только \"успешные\" коды (200-299). Затем обычным циклом for с enumerate() собери в список error_lines строки вида \"index: code\" для каждого элемента, у которого код >= 400 (например, \"1: 404\").",
+      "starter": "response_codes = [200, 404, 200, 500, 301, 200, 403]\n\n# TODO: генератор списков — только коды 200-299\nsuccessful_codes = None\n\n# TODO: обычный цикл for с enumerate() — собери строки \"index: code\" для кодов >= 400\nerror_lines = []\n",
+      "tests": "def test_successful_codes():\n    assert successful_codes == [200, 200, 200], f\"ожидалось [200, 200, 200], получено {successful_codes}\"\n\n\ndef test_error_lines():\n    assert error_lines == [\"1: 404\", \"3: 500\", \"6: 403\"], f\"получено {error_lines}\"\n"
+    },
+    {
+      "prompt": "Даны expected = [200, 200, 404, 200] и actual = [200, 500, 404, 200]. С помощью zip() в цикле for собери список mismatches из строк вида \"expected 200, got 500\" — только для тех позиций, где значения не совпали.",
+      "starter": "expected = [200, 200, 404, 200]\nactual = [200, 500, 404, 200]\n\n# TODO: через zip() в цикле for собери mismatches — строки вида \"expected X, got Y\" только для несовпадений\nmismatches = []\n",
+      "tests": "def test_mismatches():\n    assert mismatches == [\"expected 200, got 500\"], f\"получено {mismatches}\"\n\n\ndef test_mismatches_count():\n    assert len(mismatches) == 1, \"из 4 пар не совпадает только одна — mismatches должен содержать ровно один элемент\"\n"
+    },
+    {
+      "prompt": "Дан numbers = [1, 2, 2, 3, 4, 2, 5]. Построй новый список cleaned через генератор списков, оставив в нём только элементы, не равные 2, не трогая исходный numbers.",
+      "starter": "numbers = [1, 2, 2, 3, 4, 2, 5]\n\n# TODO: генератор списков — все элементы numbers, кроме значений, равных 2\ncleaned = None\n",
+      "tests": "def test_cleaned():\n    assert cleaned == [1, 3, 4, 5], f\"ожидалось [1, 3, 4, 5], получено {cleaned}\"\n\n\ndef test_original_not_mutated():\n    assert numbers == [1, 2, 2, 3, 4, 2, 5], \"исходный список numbers не должен быть изменён\"\n"
+    }
+  ]
 }

@@ -1,5 +1,24 @@
 {
-  "prompt": "Дан список результатов тестового прогона results = [True, True, False, True, False, False, True]. Посчитай количество успешных (True) в переменную passed и провалившихся (False) в переменную failed. Собери строку summary вида \"Passed: N, Failed: M\". Получи срез с последними тремя результатами в переменную last_three.",
-  "starter": "results = [True, True, False, True, False, False, True]\n\n# TODO: количество True\npassed = None\n# TODO: количество False\nfailed = None\n\n# TODO: строка вида \"Passed: N, Failed: M\"\nsummary = None\n\n# TODO: срез с последними тремя элементами results\nlast_three = None\n",
-  "tests": "def test_passed_failed_counts():\n    assert passed == 4, f\"ожидалось passed=4, получено {passed}\"\n    assert failed == 3, f\"ожидалось failed=3, получено {failed}\"\n\n\ndef test_summary_string():\n    assert summary == \"Passed: 4, Failed: 3\", f\"получено: {summary}\"\n\n\ndef test_last_three_slice():\n    assert last_three == [False, False, True], f\"ожидалось [False, False, True], получено {last_three}\"\n"
+  "exercises": [
+    {
+      "prompt": "Дан список numbers = [10, 20, 30, 40, 50]. Сохрани в first_two первые два элемента (срезом), в last_element — последний элемент, в sum_all — сумму всех элементов через sum().",
+      "starter": "numbers = [10, 20, 30, 40, 50]\n\n# TODO: первые два элемента (срезом)\nfirst_two = None\n# TODO: последний элемент\nlast_element = None\n# TODO: сумма всех элементов через sum()\nsum_all = None\n",
+      "tests": "def test_first_two():\n    assert first_two == [10, 20], f\"ожидалось [10, 20], получено {first_two}\"\n\n\ndef test_last_element():\n    assert last_element == 50, f\"ожидалось 50, получено {last_element}\"\n\n\ndef test_sum_all():\n    assert sum_all == 150, f\"ожидалось 150, получено {sum_all}\"\n"
+    },
+    {
+      "prompt": "Дан список результатов тестового прогона results = [True, True, False, True, False, False, True]. Посчитай количество успешных (True) в переменную passed и провалившихся (False) в переменную failed. Собери строку summary вида \"Passed: N, Failed: M\". Получи срез с последними тремя результатами в переменную last_three.",
+      "starter": "results = [True, True, False, True, False, False, True]\n\n# TODO: количество True\npassed = None\n# TODO: количество False\nfailed = None\n\n# TODO: строка вида \"Passed: N, Failed: M\"\nsummary = None\n\n# TODO: срез с последними тремя элементами results\nlast_three = None\n",
+      "tests": "def test_passed_failed_counts():\n    assert passed == 4, f\"ожидалось passed=4, получено {passed}\"\n    assert failed == 3, f\"ожидалось failed=3, получено {failed}\"\n\n\ndef test_summary_string():\n    assert summary == \"Passed: 4, Failed: 3\", f\"получено: {summary}\"\n\n\ndef test_last_three_slice():\n    assert last_three == [False, False, True], f\"ожидалось [False, False, True], получено {last_three}\"\n"
+    },
+    {
+      "prompt": "Дан status_codes = [200, 200, 404, 200, 500, 200]. Проверь через in, что код 500 присутствует — сохрани в has_server_error. Найди позицию первого 404 через .index() — сохрани в first_404_index. Получи sorted_codes — отсортированную копию списка через sorted(), не меняя исходный status_codes.",
+      "starter": "status_codes = [200, 200, 404, 200, 500, 200]\n\n# TODO: True, если 500 есть в status_codes\nhas_server_error = None\n\n# TODO: позиция первого 404 через .index()\nfirst_404_index = None\n\n# TODO: отсортированная копия status_codes через sorted() (исходный список не менять)\nsorted_codes = None\n",
+      "tests": "def test_has_server_error():\n    assert has_server_error is True, \"500 есть в списке, has_server_error должен быть True\"\n\n\ndef test_first_404_index():\n    assert first_404_index == 2, f\"первый 404 находится по индексу 2, получено {first_404_index}\"\n\n\ndef test_sorted_codes():\n    assert sorted_codes == [200, 200, 200, 200, 404, 500], f\"получено {sorted_codes}\"\n\n\ndef test_original_not_mutated():\n    assert status_codes == [200, 200, 404, 200, 500, 200], \"sorted() не должен менять исходный список status_codes\"\n"
+    },
+    {
+      "prompt": "Дан original = [1, 2, 3]. Заведи buggy_copy = original (обычное присваивание) и real_copy = original.copy() (настоящая копия). Добавь 99 в оба через .append(). Сохрани в original_after итоговое значение original.",
+      "starter": "original = [1, 2, 3]\n\n# TODO: обычное присваивание (НЕ копия)\nbuggy_copy = None\n# TODO: настоящая копия через .copy()\nreal_copy = None\n\n# TODO: добавь 99 в buggy_copy\n\n# TODO: добавь 99 в real_copy\n\n# TODO: итоговое значение original после обоих .append()\noriginal_after = None\n",
+      "tests": "def test_buggy_copy_affects_original():\n    assert original_after == [1, 2, 3, 99], f\"buggy_copy — та же ссылка, что и original, поэтому .append(99) на buggy_copy виден и в original; получено {original_after}\"\n\n\ndef test_real_copy_independent():\n    assert real_copy == [1, 2, 3, 99], f\"real_copy — независимая копия, в неё тоже должно быть добавлено 99, получено {real_copy}\"\n\n\ndef test_original_has_single_99():\n    assert original.count(99) == 1, \"в original должно оказаться только одно значение 99 — от buggy_copy, а не от real_copy\"\n"
+    }
+  ]
 }

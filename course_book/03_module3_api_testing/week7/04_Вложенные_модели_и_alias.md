@@ -71,6 +71,17 @@ class CompanySchema(BaseModel):
     bs: str
 ```
 
+### serialization_alias и validation_alias — когда вход и выход отличаются
+
+Иногда имя поля при чтении из API и при отправке обратно должно различаться, либо алиас нужен только в одну сторону. Для этого у `Field` есть более точечные параметры, чем общий `alias`: `validation_alias` действует только при создании модели (то есть при чтении входящих данных), а `serialization_alias` — только при `model_dump()`/`model_dump_json()` (то есть при отправке):
+
+```python
+class UserSchema(BaseModel):
+    first_name: str = Field(validation_alias="firstName", serialization_alias="first_name")
+```
+
+Здесь модель ожидает на вход `firstName` (как приходит от API), а при сериализации обратно отдаёт `first_name` — например, если твой собственный тестовый код где-то дальше договорился работать со snake_case, а внешний API отдаёт camelCase. `alias` — это просто сокращённая запись для случая, когда `validation_alias` и `serialization_alias` совпадают.
+
 ### alias_generator — когда camelCase-полей много
 
 Если бы camelCase был не в одном поле, а во всех, вручную писать `Field(alias=...)` для каждого было бы утомительно. Для этого в Pydantic есть `alias_generator`:
@@ -136,6 +147,12 @@ class UserSchema(BaseModel):
 - Забыть `by_alias=True` при сериализации запроса обратно в JSON — тогда в API уйдёт `snake_case` там, где он ждёт `camelCase`, и запрос будет отклонён или воспринят неправильно.
 - Проектировать модели "сверху вниз" и путаться в структуре — начинай с самых глубоко вложенных объектов.
 
-## Мини-задание
+## Мини-задания
 
-В отдельном scratch-скрипте (не в общем репозитории) объяви свою копию модели — только сам класс, не весь файл: `class MyCompanySchema(BaseModel): name: str; catch_phrase: str = Field(alias="catchPhrase"); bs: str`. Получи реального пользователя через `requests.get("https://jsonplaceholder.typicode.com/users/1")`, возьми `response.json()["company"]` и создай из него модель: `MyCompanySchema(**response.json()["company"])`. Убедись, что `company.catch_phrase` работает так же, как в оригинальной схеме работал `company.catchPhrase`. Ничего в общем репозитории менять и откатывать не нужно — весь эксперимент живёт в твоём отдельном файле.
+1. **Разминка.** Объяви `class Simple(BaseModel): full_name: str = Field(alias="fullName")` без `populate_by_name`. Попробуй создать объект двумя способами: `Simple(fullName="Alice")` и `Simple(full_name="Alice")`. Убедись, что первый вариант работает, а второй падает с `ValidationError` — своими глазами увидь то, о чём написано в теории ("по умолчанию Pydantic ожидает именно alias").
+
+2. **Основное.** В отдельном scratch-скрипте (не в общем репозитории) объяви свою копию модели — только сам класс, не весь файл: `class MyCompanySchema(BaseModel): name: str; catch_phrase: str = Field(alias="catchPhrase"); bs: str`. Получи реального пользователя через `requests.get("https://jsonplaceholder.typicode.com/users/1")`, возьми `response.json()["company"]` и создай из него модель: `MyCompanySchema(**response.json()["company"])`. Убедись, что `company.catch_phrase` работает так же, как в оригинальной схеме работал `company.catchPhrase`. Ничего в общем репозитории менять и откатывать не нужно — весь эксперимент живёт в твоём отдельном файле.
+
+3. **Ближе к практике.** Добавь в свою `MyCompanySchema` из задания 2 `model_config = ConfigDict(populate_by_name=True)`. Убедись, что теперь модель можно создать обоими способами: и через алиас (`MyCompanySchema(name="x", catchPhrase="y", bs="z")`), и через имя поля (`MyCompanySchema(name="x", catch_phrase="y", bs="z")`). Затем вызови `model_dump()` и `model_dump(by_alias=True)` на одном и том же объекте и сравни ключи в обоих словарях — убедись, что только второй вариант вернёт `catchPhrase`, а не `catch_phrase`.
+
+4. **Со звёздочкой.** Перепиши `MyCompanySchema` на использование `alias_generator`: `class MyCompanySchema(BaseModel): model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True); name: str; catch_phrase: str; bs: str` (без ручного `Field(alias=...)`). Проверь на том же `response.json()["company"]`, что `company.catch_phrase` и `model_dump(by_alias=True)["catchPhrase"]` работают так же, как и в задании 3 с ручным `Field(alias=...)`. Объясни себе, в какой момент вручную прописанный `alias` становится неудобным, а `alias_generator` — оправданным (частая ошибка "добавлять alias ко всем полям на всякий случай" — здесь генератор делает это за тебя одной строкой конфига, без ручного повторения для каждого поля).

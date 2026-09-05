@@ -1,5 +1,24 @@
 {
-  "prompt": "Напиши функцию format_test_report(test_name, passed, duration_ms=0), которая возвращает строку '[PASSED] test_login (120 ms)' или '[FAILED] test_login (120 ms)' в зависимости от passed. duration_ms должен иметь значение по умолчанию 0.",
-  "starter": "def format_test_report(test_name, passed, duration_ms=0):\n    # верни строку \"[PASSED] <test_name> (<duration_ms> ms)\" или \"[FAILED] <test_name> (<duration_ms> ms)\"\n    pass\n",
-  "tests": "def test_passed_report():\n    assert format_test_report(\"test_login\", True, 120) == \"[PASSED] test_login (120 ms)\", \"неверный формат для успешного теста\"\n\n\ndef test_failed_report():\n    assert format_test_report(\"test_logout\", False, 95) == \"[FAILED] test_logout (95 ms)\", \"неверный формат для упавшего теста\"\n\n\ndef test_default_duration():\n    assert format_test_report(\"test_registration\", False) == \"[FAILED] test_registration (0 ms)\", \"duration_ms по умолчанию должен быть равен 0\"\n\n\ndef test_keyword_arguments():\n    result = format_test_report(test_name=\"test_profile\", passed=True, duration_ms=50)\n    assert result == \"[PASSED] test_profile (50 ms)\", \"функция должна корректно работать с именованными аргументами\"\n"
+  "exercises": [
+    {
+      "prompt": "Разминка. Напиши функцию multiply(a, b), которая возвращает произведение a и b. Проверь её с позиционными аргументами и с именованными в обратном порядке.",
+      "starter": "def multiply(a, b):\n    # TODO: верни произведение a и b\n    pass\n",
+      "tests": "def test_positional_call():\n    assert multiply(3, 4) == 12, \"multiply(3, 4) должен вернуть 12\"\n\n\ndef test_keyword_call_reversed_order():\n    assert multiply(b=5, a=2) == 10, \"именованные аргументы можно передавать в любом порядке\"\n"
+    },
+    {
+      "prompt": "Основное. Напиши функцию format_test_report(test_name, passed, duration_ms=0), которая возвращает строку '[PASSED] test_login (120 ms)' или '[FAILED] test_login (120 ms)' в зависимости от passed. duration_ms должен иметь значение по умолчанию 0.",
+      "starter": "def format_test_report(test_name, passed, duration_ms=0):\n    # верни строку \"[PASSED] <test_name> (<duration_ms> ms)\" или \"[FAILED] <test_name> (<duration_ms> ms)\"\n    pass\n",
+      "tests": "def test_passed_report():\n    assert format_test_report(\"test_login\", True, 120) == \"[PASSED] test_login (120 ms)\", \"неверный формат для успешного теста\"\n\n\ndef test_failed_report():\n    assert format_test_report(\"test_logout\", False, 95) == \"[FAILED] test_logout (95 ms)\", \"неверный формат для упавшего теста\"\n\n\ndef test_default_duration():\n    assert format_test_report(\"test_registration\", False) == \"[FAILED] test_registration (0 ms)\", \"duration_ms по умолчанию должен быть равен 0\"\n\n\ndef test_keyword_arguments():\n    result = format_test_report(test_name=\"test_profile\", passed=True, duration_ms=50)\n    assert result == \"[PASSED] test_profile (50 ms)\", \"функция должна корректно работать с именованными аргументами\"\n"
+    },
+    {
+      "prompt": "Ближе к практике. Напиши функцию build_endpoint(base_url: str, path: str, page: int = 1) -> str, которая собирает URL вида 'https://api.example.com/users?page=1'. page по умолчанию равен 1.",
+      "starter": "def build_endpoint(base_url: str, path: str, page: int = 1) -> str:\n    # TODO: верни f\"{base_url}/{path}?page={page}\"\n    pass\n",
+      "tests": "def test_default_page():\n    result = build_endpoint(\"https://api.example.com\", \"users\")\n    assert result == \"https://api.example.com/users?page=1\", f\"по умолчанию page должен быть 1: {result}\"\n\n\ndef test_custom_page_positional():\n    result = build_endpoint(\"https://api.example.com\", \"orders\", 3)\n    assert result == \"https://api.example.com/orders?page=3\", f\"page можно передать позиционным третьим аргументом: {result}\"\n\n\ndef test_custom_page_keyword_any_order():\n    result = build_endpoint(path=\"items\", base_url=\"https://api.example.com\", page=2)\n    assert result == \"https://api.example.com/items?page=2\", \"именованные аргументы должны работать в любом порядке\"\n"
+    },
+    {
+      "prompt": "Со звёздочкой. Напиши функцию add_result(item, results=None), которая добавляет item в results и возвращает его — но без ловушки изменяемого значения по умолчанию: каждый вызов без явного results должен получать свой отдельный новый список.",
+      "starter": "def add_result(item, results=None):\n    # TODO: если results не передан, создай новый пустой список для этого вызова (а не переиспользуй один и тот же между вызовами)\n    # добавь item в results и верни results\n    pass\n",
+      "tests": "def test_returns_list_with_item():\n    assert add_result(\"t1\") == [\"t1\"], \"должен вернуться список с добавленным элементом\"\n\n\ndef test_calls_do_not_leak_state():\n    first = add_result(\"t1\")\n    second = add_result(\"t2\")\n    assert second == [\"t2\"], f\"вызовы без явного results не должны делить один и тот же список между собой: {second}\"\n\n\ndef test_explicit_results_still_works():\n    existing = [\"t0\"]\n    result = add_result(\"t1\", existing)\n    assert result == [\"t0\", \"t1\"], \"если results передан явно, элемент должен добавиться к нему\"\n"
+    }
+  ]
 }

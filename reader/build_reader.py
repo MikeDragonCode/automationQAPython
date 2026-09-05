@@ -86,9 +86,12 @@ def add_page(path: Path, section: str, subgroup: str | None, is_overview: bool =
     exercise_path = path.parent / (path.stem + ".exercise.json")
     if gateable and exercise_path.exists():
         try:
-            exercise = json.loads(exercise_path.read_text(encoding="utf-8"))
-            assert exercise.get("prompt") and exercise.get("starter") and exercise.get("tests")
-            page["exercise"] = exercise
+            data = json.loads(exercise_path.read_text(encoding="utf-8"))
+            exercises = data.get("exercises")
+            assert isinstance(exercises, list) and 3 <= len(exercises) <= 4
+            for ex in exercises:
+                assert ex.get("prompt") and ex.get("starter") and ex.get("tests")
+            page["exercises"] = exercises
         except Exception as e:
             print(f"WARN: bad exercise json at {exercise_path.relative_to(ROOT)}: {e}")
 

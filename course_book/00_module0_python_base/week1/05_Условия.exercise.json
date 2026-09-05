@@ -1,5 +1,24 @@
 {
-  "prompt": "Для status_code_1 = 200 и status_code_2 = 404 определи категорию каждого по правилам: \"2xx success\" (200-299), \"3xx redirect\" (300-399), \"4xx client error\" (400-499), \"5xx server error\" (500-599), иначе \"unknown\". Сохрани результаты в category_1 и category_2. Затем через тернарный оператор посчитай is_success_1 и is_success_2 — True, если код в диапазоне [200; 299], иначе False.",
-  "starter": "status_code_1 = 200\nstatus_code_2 = 404\n\n# TODO: определи категорию через if/elif/else для каждого статуса\ncategory_1 = None\ncategory_2 = None\n\n# TODO: через тернарный оператор — True, если код в диапазоне [200; 299]\nis_success_1 = None\nis_success_2 = None\n",
-  "tests": "def test_category_1_2xx():\n    assert category_1 == \"2xx success\", f\"ожидалось '2xx success', получено {category_1}\"\n\n\ndef test_category_2_4xx():\n    assert category_2 == \"4xx client error\", f\"ожидалось '4xx client error', получено {category_2}\"\n\n\ndef test_is_success_ternary():\n    assert is_success_1 is True, \"200 входит в диапазон 2xx, ожидается True\"\n    assert is_success_2 is False, \"404 не входит в диапазон 2xx, ожидается False\"\n"
+  "exercises": [
+    {
+      "prompt": "Дано число number = -7. Напиши if/elif/else, определяющий знак числа, и сохрани результат в переменную sign: \"positive\", \"negative\" или \"zero\".",
+      "starter": "number = -7\n\n# TODO: if/elif/else — определи знак числа\nsign = None\n",
+      "tests": "def test_sign_negative():\n    assert sign == \"negative\", f\"ожидалось 'negative' для number=-7, получено {sign!r}\"\n\n\ndef test_sign_is_str():\n    assert isinstance(sign, str), \"sign должен быть строкой\"\n"
+    },
+    {
+      "prompt": "Для status_code = 404 определи категорию по правилам: \"2xx success\" (200-299), \"3xx redirect\" (300-399), \"4xx client error\" (400-499), \"5xx server error\" (500-599), иначе \"unknown\". Сохрани результат в category. Затем через тернарный оператор сохрани в is_success — True, если код в диапазоне [200; 299], иначе False.",
+      "starter": "status_code = 404\n\n# TODO: определи категорию через if/elif/else\ncategory = None\n\n# TODO: через тернарный оператор — True, если код в диапазоне [200; 299]\nis_success = None\n",
+      "tests": "def test_category_4xx():\n    assert category == \"4xx client error\", f\"ожидалось '4xx client error', получено {category}\"\n\n\ndef test_is_success_ternary():\n    assert is_success is False, \"404 не входит в диапазон 2xx, ожидается False\"\n"
+    },
+    {
+      "prompt": "Дан результат запроса: status_code = 200, response_time_ms = 1500, sla_ms = 1000. Определи verdict: \"FAIL\", если status_code не 200; \"SLOW\", если status_code == 200, но response_time_ms больше sla_ms; \"PASS\", если status_code == 200 и уложились в sla_ms.",
+      "starter": "status_code = 200\nresponse_time_ms = 1500\nsla_ms = 1000\n\n# TODO: verdict по правилам FAIL / SLOW / PASS\nverdict = None\n",
+      "tests": "def test_verdict_slow():\n    assert verdict == \"SLOW\", f\"status_code == 200, но response_time_ms (1500) > sla_ms (1000), ожидалось 'SLOW', получено {verdict!r}\"\n\n\ndef test_verdict_is_str():\n    assert isinstance(verdict, str), \"verdict должен быть строкой\"\n"
+    },
+    {
+      "prompt": "Дано retry_count = 0. Сохрани в wrong_check результат проверки if retry_count: (то есть bool(retry_count)). Сохрани в correct_check результат явной проверки retry_count > 0.",
+      "starter": "retry_count = 0\n\n# TODO: результат неявной проверки bool(retry_count)\nwrong_check = None\n\n# TODO: результат явной проверки retry_count > 0\ncorrect_check = None\n",
+      "tests": "def test_wrong_check_is_false():\n    assert wrong_check is False, \"bool(0) — falsy, wrong_check должен быть False\"\n\n\ndef test_correct_check_is_false():\n    assert correct_check is False, \"0 > 0 — False, correct_check должен быть False\"\n\n\ndef test_both_are_bool():\n    assert isinstance(wrong_check, bool) and isinstance(correct_check, bool), \"оба значения должны быть именно bool\"\n"
+    }
+  ]
 }
